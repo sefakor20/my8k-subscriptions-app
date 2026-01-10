@@ -13,7 +13,8 @@
         "laravel/fortify": "^1.33",
         "laravel/framework": "^12.46",
         "laravel/tinker": "^2.11.0",
-        "livewire/flux": "^2.10.2"
+        "livewire/flux": "^2.10.2",
+        "propaganistas/laravel-phone": "^6.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.24.1",
