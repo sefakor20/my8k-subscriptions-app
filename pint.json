@@ -1,0 +1,15 @@
+{
+    "preset": "per",
+    "rules": {
+        "array_push": true,
+        "declare_strict_types": true,
+        "global_namespace_import": {
+            "import_classes": true,
+            "import_functions": true,
+            "import_constants": true
+        },
+        "lowercase_keywords": true,
+        "lowercase_static_reference": true,
+        "mb_str_functions": true
+    }
+}
