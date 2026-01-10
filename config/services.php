@@ -37,4 +37,18 @@ return [
         ],
     ],
 
+    'my8k' => [
+        'base_url' => env('MY8K_API_BASE_URL', 'https://api.my8k.com'),
+        'api_key' => env('MY8K_API_KEY'),
+        'timeout' => env('MY8K_API_TIMEOUT', 30),
+    ],
+
+    'woocommerce' => [
+        'store_url' => env('WOOCOMMERCE_STORE_URL'),
+        'consumer_key' => env('WOOCOMMERCE_CONSUMER_KEY'),
+        'consumer_secret' => env('WOOCOMMERCE_CONSUMER_SECRET'),
+        'webhook_secret' => env('WOOCOMMERCE_WEBHOOK_SECRET'),
+        'version' => env('WOOCOMMERCE_API_VERSION', 'wc/v3'),
+    ],
+
 ];
