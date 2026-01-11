@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Http\Controllers\Api\WooCommerceWebhookController;
+use Illuminate\Support\Facades\Route;
+
+// WooCommerce Webhook Routes
+Route::prefix('v1/webhooks/woocommerce')
+    ->middleware(['verify.woocommerce.webhook'])
+    ->controller(WooCommerceWebhookController::class)
+    ->group(function () {
+        Route::post('order-completed', 'orderCompleted')->name('webhooks.woocommerce.order-completed');
+        Route::post('subscription-renewed', 'subscriptionRenewed')->name('webhooks.woocommerce.subscription-renewed');
+        Route::post('subscription-cancelled', 'subscriptionCancelled')->name('webhooks.woocommerce.subscription-cancelled');
+        Route::post('payment-failed', 'paymentFailed')->name('webhooks.woocommerce.payment-failed');
+    });

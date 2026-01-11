@@ -5,8 +5,6 @@ declare(strict_types=1);
 use App\Services\My8kApiClient;
 use Illuminate\Support\Facades\Http;
 
-uses(Tests\TestCase::class);
-
 beforeEach(function () {
     config([
         'services.my8k.base_url' => 'https://my8k.me/api/api.php',
