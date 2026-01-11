@@ -21,8 +21,10 @@ class WooCommerceWebhookHandler
 {
     /**
      * Find or create user from WooCommerce order data
+     *
+     * @return array{user: User, was_created: bool}
      */
-    public function findOrCreateUser(array $orderData): User
+    public function findOrCreateUser(array $orderData): array
     {
         $billing = $orderData['billing'] ?? [];
         $email = $billing['email'] ?? $orderData['customer_email'] ?? null;
@@ -35,7 +37,10 @@ class WooCommerceWebhookHandler
         $user = User::where('email', $email)->first();
 
         if ($user) {
-            return $user;
+            return [
+                'user' => $user,
+                'was_created' => false,
+            ];
         }
 
         // Create new user
@@ -43,12 +48,17 @@ class WooCommerceWebhookHandler
         $lastName = $billing['last_name'] ?? '';
         $name = trim("{$firstName} {$lastName}") ?: 'Customer';
 
-        return User::create([
+        $user = User::create([
             'name' => $name,
             'email' => $email,
             'password' => Hash::make(Str::random(32)), // Random password, user will reset
             'email_verified_at' => now(), // Auto-verify since payment succeeded
         ]);
+
+        return [
+            'user' => $user,
+            'was_created' => true,
+        ];
     }
 
     /**
@@ -195,7 +205,9 @@ class WooCommerceWebhookHandler
             }
 
             // Find or create user
-            $user = $this->findOrCreateUser($orderData);
+            $userData = $this->findOrCreateUser($orderData);
+            $user = $userData['user'];
+            $userWasCreated = $userData['was_created'];
 
             // Extract plan from line items
             $plan = $this->extractPlanFromLineItems($orderData['line_items'] ?? []);
@@ -223,6 +235,7 @@ class WooCommerceWebhookHandler
                 'message' => 'Order processed successfully',
                 'duplicate' => false,
                 'user_id' => $user->id,
+                'user_was_created' => $userWasCreated,
                 'subscription_id' => $subscription->id,
                 'order_id' => $order->id,
                 'plan_id' => $plan->id,

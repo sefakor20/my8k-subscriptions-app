@@ -9,10 +9,15 @@ use App\Http\Controllers\Controller;
 use App\Jobs\ExtendAccountJob;
 use App\Jobs\ProvisionNewAccountJob;
 use App\Jobs\SuspendAccountJob;
+use App\Mail\PaymentFailureReminder;
+use App\Mail\WelcomeNewCustomer;
+use App\Models\User;
 use App\Services\WooCommerceWebhookHandler;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 use Exception;
 
 class WooCommerceWebhookController extends Controller
@@ -52,6 +57,25 @@ class WooCommerceWebhookController extends Controller
                 subscriptionId: $result['subscription_id'],
                 planId: $result['plan_id'],
             );
+
+            // Send welcome email if this is a new user
+            if ($result['user_was_created'] ?? false) {
+                $user = User::find($result['user_id']);
+
+                if ($user instanceof User) {
+                    // Generate password reset token
+                    $token = Password::createToken($user);
+                    $passwordResetUrl = url("/reset-password/{$token}?email=" . urlencode($user->email));
+
+                    // Send welcome email
+                    Mail::to($user->email)->send(new WelcomeNewCustomer($user, $passwordResetUrl));
+
+                    Log::info('Welcome email sent to new customer', [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                    ]);
+                }
+            }
 
             Log::info('Order processed and provisioning job dispatched', [
                 'order_id' => $result['order_id'],
@@ -238,24 +262,34 @@ class WooCommerceWebhookController extends Controller
                 ], 404);
             }
 
+            // Extract payment method info
+            $paymentMethod = $subscriptionData['payment_method_title'] ?? 'Unknown payment method';
+
             // Log payment failure for admin review
             Log::critical('Payment failed for subscription, manual review required', [
                 'subscription_id' => $subscription->id,
                 'user_id' => $subscription->user_id,
                 'woocommerce_subscription_id' => $woocommerceSubscriptionId,
                 'customer_email' => $subscriptionData['billing']['email'] ?? null,
-                'payment_method' => $subscriptionData['payment_method_title'] ?? null,
+                'payment_method' => $paymentMethod,
             ]);
 
-            // TODO: Consider implementing:
-            // - Email notification to customer
-            // - Email notification to admin
-            // - Update subscription status to PaymentFailed
-            // - Suspend service account after grace period
+            // Send payment failure email to customer
+            Mail::to($subscription->user->email)
+                ->send(new PaymentFailureReminder($subscription, $paymentMethod));
+
+            Log::info('Payment failure reminder email sent to customer', [
+                'subscription_id' => $subscription->id,
+                'user_id' => $subscription->user_id,
+                'email' => $subscription->user->email,
+            ]);
+
+            // Note: Subscription status update and service suspension are handled by
+            // separate scheduled commands after grace period expires
 
             return response()->json([
                 'success' => true,
-                'message' => 'Payment failure logged for review',
+                'message' => 'Payment failure processed and customer notified',
             ], 200);
         } catch (Exception $e) {
             Log::error('Failed to process payment failed webhook', [

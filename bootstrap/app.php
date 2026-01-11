@@ -44,6 +44,25 @@ return Application::configure(basePath: dirname(__DIR__))
             ->at('03:00')
             ->withoutOverlapping()
             ->runInBackground();
+
+        // Send expiry reminder emails at different intervals
+        $schedule->command('subscriptions:send-expiry-reminders --days=7')
+            ->daily()
+            ->at('09:00')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        $schedule->command('subscriptions:send-expiry-reminders --days=3')
+            ->daily()
+            ->at('09:30')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        $schedule->command('subscriptions:send-expiry-reminders --days=1')
+            ->daily()
+            ->at('10:00')
+            ->withoutOverlapping()
+            ->runInBackground();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

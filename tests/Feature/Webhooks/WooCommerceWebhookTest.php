@@ -414,11 +414,11 @@ test('payment failed webhook logs error for admin review', function (): void {
     $response->assertSuccessful()
         ->assertJson([
             'success' => true,
-            'message' => 'Payment failure logged for review',
+            'message' => 'Payment failure processed and customer notified',
         ]);
 
-    // No jobs should be dispatched for payment failures
-    Queue::assertNothingPushed();
+    // Payment failure email should be queued
+    Queue::assertPushed(\Illuminate\Mail\SendQueuedMailable::class);
 });
 
 test('payment failed webhook returns 404 when subscription not found', function (): void {
