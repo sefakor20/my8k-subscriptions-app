@@ -22,7 +22,7 @@ class My8kApiClient
     {
         $this->baseUrl = config('services.my8k.base_url', 'https://my8k.me/api/api.php');
         $this->apiKey = config('services.my8k.api_key');
-        $this->timeout = config('services.my8k.timeout', 30);
+        $this->timeout = (int) config('services.my8k.timeout', 30);
     }
 
     /**

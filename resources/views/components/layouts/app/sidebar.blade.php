@@ -29,11 +29,11 @@
                             {{ __('Subscriptions') }}
                         </flux:sidebar.item>
 
-                        <flux:sidebar.item icon="shopping-cart" href="#" :current="request()->routeIs('admin.orders.*')" wire:navigate>
+                        <flux:sidebar.item icon="shopping-cart" :href="route('admin.orders.index')" :current="request()->routeIs('admin.orders.*')" wire:navigate>
                             {{ __('Orders') }}
                         </flux:sidebar.item>
 
-                        <flux:sidebar.item icon="exclamation-triangle" href="#" :current="request()->routeIs('admin.failed-jobs.*')" wire:navigate>
+                        <flux:sidebar.item icon="exclamation-triangle" :href="route('admin.failed-jobs.index')" :current="request()->routeIs('admin.failed-jobs.*')" wire:navigate>
                             {{ __('Failed Jobs') }}
                         </flux:sidebar.item>
 
