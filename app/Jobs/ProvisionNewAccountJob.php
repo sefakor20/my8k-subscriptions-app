@@ -7,11 +7,15 @@ namespace App\Jobs;
 use App\Enums\OrderStatus;
 use App\Enums\ProvisioningAction;
 use App\Enums\ServiceAccountStatus;
+use App\Mail\AccountCredentialsReady;
+use App\Mail\ProvisioningFailed;
 use App\Models\Order;
 use App\Models\Plan;
 use App\Models\ServiceAccount;
 use App\Models\Subscription;
+use App\Models\User;
 use App\Services\My8kApiClient;
+use Illuminate\Support\Facades\Mail;
 
 class ProvisionNewAccountJob extends BaseProvisioningJob
 {
@@ -122,6 +126,10 @@ class ProvisionNewAccountJob extends BaseProvisioningJob
         $subscription->update([
             'service_account_id' => $serviceAccount->id,
         ]);
+
+        // Send credentials email to customer
+        Mail::to($subscription->user->email)
+            ->send(new AccountCredentialsReady($serviceAccount));
     }
 
     /**
@@ -155,6 +163,18 @@ class ProvisionNewAccountJob extends BaseProvisioningJob
             $order->update([
                 'status' => OrderStatus::ProvisioningFailed,
             ]);
+
+            // Send failure alert to all admin users
+            $admins = User::where('is_admin', true)->get();
+
+            foreach ($admins as $admin) {
+                Mail::to($admin->email)
+                    ->send(new ProvisioningFailed(
+                        order: $order,
+                        errorMessage: $result['error'] ?? 'Unknown error',
+                        errorCode: $result['error_code'] ?? 'ERR_UNKNOWN',
+                    ));
+            }
         }
     }
 }
