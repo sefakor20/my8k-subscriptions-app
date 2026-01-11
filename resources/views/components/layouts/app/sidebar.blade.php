@@ -16,6 +16,36 @@
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                @if(auth()->user()?->isAdmin())
+                    <flux:separator variant="subtle" />
+
+                    <flux:sidebar.group :heading="__('Admin')" class="grid">
+                        <flux:sidebar.item icon="squares-2x2" :href="route('admin.dashboard')" :current="request()->routeIs('admin.dashboard')" wire:navigate>
+                            {{ __('Dashboard') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="rectangle-stack" href="#" :current="request()->routeIs('admin.subscriptions.*')" wire:navigate>
+                            {{ __('Subscriptions') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="shopping-cart" href="#" :current="request()->routeIs('admin.orders.*')" wire:navigate>
+                            {{ __('Orders') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="exclamation-triangle" href="#" :current="request()->routeIs('admin.failed-jobs.*')" wire:navigate>
+                            {{ __('Failed Jobs') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="document-text" href="#" :current="request()->routeIs('admin.provisioning-logs.*')" wire:navigate>
+                            {{ __('Provisioning Logs') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="tag" href="#" :current="request()->routeIs('admin.plans.*')" wire:navigate>
+                            {{ __('Plans') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
             </flux:sidebar.nav>
 
             <flux:spacer />
