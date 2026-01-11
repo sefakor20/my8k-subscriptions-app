@@ -121,7 +121,7 @@ class ExpireSubscriptionsCommand extends Command
             return;
         }
 
-        DB::transaction(function () use ($subscription) {
+        DB::transaction(function () use ($subscription): void {
             // Update subscription status to Expired
             $subscription->update([
                 'status' => SubscriptionStatus::Expired,

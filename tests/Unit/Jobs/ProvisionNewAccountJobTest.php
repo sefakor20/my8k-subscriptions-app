@@ -16,7 +16,7 @@ use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config([
         'services.my8k.base_url' => 'https://my8k.me/api/api.php',
         'services.my8k.api_key' => 'test-api-key',
@@ -24,7 +24,7 @@ beforeEach(function () {
     ]);
 });
 
-test('provision new account job successfully creates service account', function () {
+test('provision new account job successfully creates service account', function (): void {
     $user = User::factory()->create();
     $plan = Plan::factory()->create([
         'my8k_plan_code' => 'PLAN_BASIC_M',
@@ -92,7 +92,7 @@ test('provision new account job successfully creates service account', function 
         ->and($log->subscription_id)->toBe($subscription->id);
 });
 
-test('provision new account job handles api failure and retries', function () {
+test('provision new account job handles api failure and retries', function (): void {
     $user = User::factory()->create();
     $plan = Plan::factory()->create([
         'my8k_plan_code' => 'PLAN_BASIC_M',
@@ -137,7 +137,7 @@ test('provision new account job handles api failure and retries', function () {
         ->and($log->error_message)->toContain('Insufficient credits');
 });
 
-test('provision new account job handles network timeout and throws for retry', function () {
+test('provision new account job handles network timeout and throws for retry', function (): void {
     $user = User::factory()->create();
     $plan = Plan::factory()->create([
         'my8k_plan_code' => 'PLAN_BASIC_M',
@@ -154,7 +154,7 @@ test('provision new account job handles network timeout and throws for retry', f
     ]);
 
     // Mock HTTP connection timeout
-    Http::fake(function () {
+    Http::fake(function (): void {
         throw new \Illuminate\Http\Client\ConnectionException('Connection timeout');
     });
 
@@ -175,7 +175,7 @@ test('provision new account job handles network timeout and throws for retry', f
         ->and($log->attempt_number)->toBe(1);
 });
 
-test('provision new account job handles non-retryable error', function () {
+test('provision new account job handles non-retryable error', function (): void {
     $user = User::factory()->create();
     $plan = Plan::factory()->create([
         'my8k_plan_code' => 'PLAN_BASIC_M',
@@ -215,7 +215,7 @@ test('provision new account job handles non-retryable error', function () {
         ->and($log->error_message)->toContain('Invalid plan code');
 });
 
-test('provision new account job extracts server url from m3u url', function () {
+test('provision new account job extracts server url from m3u url', function (): void {
     $user = User::factory()->create();
     $plan = Plan::factory()->create([
         'my8k_plan_code' => 'PLAN_BASIC_M',

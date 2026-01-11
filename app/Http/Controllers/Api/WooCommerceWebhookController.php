@@ -92,7 +92,7 @@ class WooCommerceWebhookController extends Controller
             // Find subscription by WooCommerce ID
             $subscription = $this->webhookHandler->findSubscriptionByWooCommerceId($woocommerceSubscriptionId);
 
-            if (! $subscription) {
+            if (!$subscription instanceof \App\Models\Subscription) {
                 Log::warning('Subscription not found for renewal webhook', [
                     'woocommerce_subscription_id' => $woocommerceSubscriptionId,
                 ]);
@@ -159,7 +159,7 @@ class WooCommerceWebhookController extends Controller
             // Find subscription by WooCommerce ID
             $subscription = $this->webhookHandler->findSubscriptionByWooCommerceId($woocommerceSubscriptionId);
 
-            if (! $subscription) {
+            if (!$subscription instanceof \App\Models\Subscription) {
                 Log::warning('Subscription not found for cancellation webhook', [
                     'woocommerce_subscription_id' => $woocommerceSubscriptionId,
                 ]);
@@ -227,7 +227,7 @@ class WooCommerceWebhookController extends Controller
             // Find subscription by WooCommerce ID
             $subscription = $this->webhookHandler->findSubscriptionByWooCommerceId($woocommerceSubscriptionId);
 
-            if (! $subscription) {
+            if (!$subscription instanceof \App\Models\Subscription) {
                 Log::warning('Subscription not found for payment failed webhook', [
                     'woocommerce_subscription_id' => $woocommerceSubscriptionId,
                 ]);

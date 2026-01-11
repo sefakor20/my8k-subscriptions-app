@@ -69,10 +69,10 @@ class WooCommerceWebhookHandler
         foreach ($lineItems as $item) {
             $productId = (string) ($item['product_id'] ?? '');
 
-            if ($productId) {
+            if ($productId !== '' && $productId !== '0') {
                 $plan = $this->findPlanByWooCommerceId($productId);
 
-                if ($plan) {
+                if ($plan instanceof \App\Models\Plan) {
                     return $plan;
                 }
             }
@@ -108,7 +108,7 @@ class WooCommerceWebhookHandler
             'expires_at' => $expiresAt,
             'last_renewal_at' => $startsAt,
             'next_renewal_at' => $expiresAt,
-            'auto_renew' => $woocommerceSubscriptionId ? true : false,
+            'auto_renew' => (bool) $woocommerceSubscriptionId,
             'metadata' => [],
         ]);
     }
@@ -181,7 +181,7 @@ class WooCommerceWebhookHandler
      */
     public function processOrderCompleted(array $orderData): array
     {
-        return DB::transaction(function () use ($orderData) {
+        return DB::transaction(function () use ($orderData): array {
             $woocommerceOrderId = (string) $orderData['id'];
             $idempotencyKey = $this->generateIdempotencyKey($orderData);
 
@@ -200,7 +200,7 @@ class WooCommerceWebhookHandler
             // Extract plan from line items
             $plan = $this->extractPlanFromLineItems($orderData['line_items'] ?? []);
 
-            if (! $plan) {
+            if (!$plan instanceof \App\Models\Plan) {
                 throw new RuntimeException('No matching plan found in order line items');
             }
 

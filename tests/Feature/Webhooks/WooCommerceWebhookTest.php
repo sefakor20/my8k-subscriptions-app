@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Queue;
 
 use function Pest\Laravel\postJson;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config([
         'services.woocommerce.webhook_secret' => 'test-webhook-secret',
     ]);
@@ -32,7 +32,7 @@ function signWebhookPayload(array $payload, string $secret = 'test-webhook-secre
     return base64_encode(hash_hmac('sha256', $jsonPayload, $secret, true));
 }
 
-test('order completed webhook processes successfully and dispatches provisioning job', function () {
+test('order completed webhook processes successfully and dispatches provisioning job', function (): void {
     $plan = Plan::factory()->create([
         'woocommerce_id' => '12345',
         'is_active' => true,
@@ -93,14 +93,14 @@ test('order completed webhook processes successfully and dispatches provisioning
         ->and($order->subscription_id)->toBe($subscription->id);
 
     // Verify provisioning job was dispatched
-    Queue::assertPushed(ProvisionNewAccountJob::class, function ($job) use ($order, $subscription, $plan) {
+    Queue::assertPushed(ProvisionNewAccountJob::class, function ($job) use ($order, $subscription, $plan): bool {
         return $job->orderId === $order->id
             && $job->subscriptionId === $subscription->id
             && $job->planId === $plan->id;
     });
 });
 
-test('order completed webhook handles duplicate orders with idempotency', function () {
+test('order completed webhook handles duplicate orders with idempotency', function (): void {
     $plan = Plan::factory()->create([
         'woocommerce_id' => '12345',
         'is_active' => true,
@@ -148,7 +148,7 @@ test('order completed webhook handles duplicate orders with idempotency', functi
     Queue::assertNothingPushed();
 });
 
-test('order completed webhook rejects invalid signature', function () {
+test('order completed webhook rejects invalid signature', function (): void {
     $orderData = [
         'id' => 1001,
         'status' => 'completed',
@@ -166,7 +166,7 @@ test('order completed webhook rejects invalid signature', function () {
     Queue::assertNothingPushed();
 });
 
-test('order completed webhook rejects missing signature', function () {
+test('order completed webhook rejects missing signature', function (): void {
     $orderData = [
         'id' => 1001,
         'status' => 'completed',
@@ -182,7 +182,7 @@ test('order completed webhook rejects missing signature', function () {
     Queue::assertNothingPushed();
 });
 
-test('order completed webhook returns error when plan not found', function () {
+test('order completed webhook returns error when plan not found', function (): void {
     $orderData = [
         'id' => 1001,
         'status' => 'completed',
@@ -214,7 +214,7 @@ test('order completed webhook returns error when plan not found', function () {
     Queue::assertNothingPushed();
 });
 
-test('subscription renewed webhook dispatches extend job', function () {
+test('subscription renewed webhook dispatches extend job', function (): void {
     $plan = Plan::factory()->create(['duration_days' => 30]);
     $user = User::factory()->create();
     $subscription = Subscription::factory()->create([
@@ -247,14 +247,14 @@ test('subscription renewed webhook dispatches extend job', function () {
             'message' => 'Renewal processed successfully',
         ]);
 
-    Queue::assertPushed(ExtendAccountJob::class, function ($job) use ($subscription, $serviceAccount, $plan) {
+    Queue::assertPushed(ExtendAccountJob::class, function ($job) use ($subscription, $serviceAccount, $plan): bool {
         return $job->subscriptionId === $subscription->id
             && $job->serviceAccountId === $serviceAccount->id
             && $job->durationDays === $plan->duration_days;
     });
 });
 
-test('subscription renewed webhook returns 404 when subscription not found', function () {
+test('subscription renewed webhook returns 404 when subscription not found', function (): void {
     $subscriptionData = [
         'id' => 'sub_nonexistent',
         'status' => 'active',
@@ -275,7 +275,7 @@ test('subscription renewed webhook returns 404 when subscription not found', fun
     Queue::assertNothingPushed();
 });
 
-test('subscription renewed webhook returns 400 when no service account linked', function () {
+test('subscription renewed webhook returns 400 when no service account linked', function (): void {
     $plan = Plan::factory()->create();
     $user = User::factory()->create();
     $subscription = Subscription::factory()->create([
@@ -305,7 +305,7 @@ test('subscription renewed webhook returns 400 when no service account linked', 
     Queue::assertNothingPushed();
 });
 
-test('subscription cancelled webhook dispatches suspend job', function () {
+test('subscription cancelled webhook dispatches suspend job', function (): void {
     $plan = Plan::factory()->create();
     $user = User::factory()->create();
     $subscription = Subscription::factory()->create([
@@ -345,13 +345,13 @@ test('subscription cancelled webhook dispatches suspend job', function () {
         ->and($subscription->auto_renew)->toBeFalse();
 
     // Verify suspend job was dispatched
-    Queue::assertPushed(SuspendAccountJob::class, function ($job) use ($subscription, $serviceAccount) {
+    Queue::assertPushed(SuspendAccountJob::class, function ($job) use ($subscription, $serviceAccount): bool {
         return $job->subscriptionId === $subscription->id
             && $job->serviceAccountId === $serviceAccount->id;
     });
 });
 
-test('subscription cancelled webhook handles subscription without service account', function () {
+test('subscription cancelled webhook handles subscription without service account', function (): void {
     $plan = Plan::factory()->create();
     $user = User::factory()->create();
     $subscription = Subscription::factory()->create([
@@ -387,7 +387,7 @@ test('subscription cancelled webhook handles subscription without service accoun
     Queue::assertNothingPushed();
 });
 
-test('payment failed webhook logs error for admin review', function () {
+test('payment failed webhook logs error for admin review', function (): void {
     $plan = Plan::factory()->create();
     $user = User::factory()->create();
     $subscription = Subscription::factory()->create([
@@ -421,7 +421,7 @@ test('payment failed webhook logs error for admin review', function () {
     Queue::assertNothingPushed();
 });
 
-test('payment failed webhook returns 404 when subscription not found', function () {
+test('payment failed webhook returns 404 when subscription not found', function (): void {
     $subscriptionData = [
         'id' => 'sub_nonexistent',
         'status' => 'on-hold',

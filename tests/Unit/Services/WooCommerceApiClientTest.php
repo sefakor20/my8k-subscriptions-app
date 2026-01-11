@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Services\WooCommerceApiClient;
 use Automattic\WooCommerce\Client;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config([
         'services.woocommerce.store_url' => 'https://test-store.com',
         'services.woocommerce.consumer_key' => 'ck_test_key',
@@ -14,7 +14,7 @@ beforeEach(function () {
     ]);
 });
 
-test('gets a single order successfully', function () {
+test('gets a single order successfully', function (): void {
     $mockClient = $this->mock(Client::class);
     $mockClient->shouldReceive('get')
         ->once()
@@ -38,7 +38,7 @@ test('gets a single order successfully', function () {
         ->and($result['data']['status'])->toBe('completed');
 });
 
-test('gets multiple orders successfully', function () {
+test('gets multiple orders successfully', function (): void {
     $mockClient = $this->mock(Client::class);
     $mockClient->shouldReceive('get')
         ->once()
@@ -61,7 +61,7 @@ test('gets multiple orders successfully', function () {
         ->and($result['data'])->toHaveCount(2);
 });
 
-test('gets a single subscription successfully', function () {
+test('gets a single subscription successfully', function (): void {
     $mockClient = $this->mock(Client::class);
     $mockClient->shouldReceive('get')
         ->once()
@@ -85,7 +85,7 @@ test('gets a single subscription successfully', function () {
         ->and($result['data']['status'])->toBe('active');
 });
 
-test('adds order note successfully', function () {
+test('adds order note successfully', function (): void {
     $mockClient = $this->mock(Client::class);
     $mockClient->shouldReceive('post')
         ->once()
@@ -110,7 +110,7 @@ test('adds order note successfully', function () {
         ->and($result['data']['note'])->toBe('IPTV account provisioned successfully');
 });
 
-test('adds subscription note successfully', function () {
+test('adds subscription note successfully', function (): void {
     $mockClient = $this->mock(Client::class);
     $mockClient->shouldReceive('post')
         ->once()
@@ -135,7 +135,7 @@ test('adds subscription note successfully', function () {
         ->and($result['data']['note'])->toBe('Subscription renewed');
 });
 
-test('updates order successfully', function () {
+test('updates order successfully', function (): void {
     $mockClient = $this->mock(Client::class);
     $mockClient->shouldReceive('put')
         ->once()
@@ -157,7 +157,7 @@ test('updates order successfully', function () {
         ->and($result['data']['status'])->toBe('processing');
 });
 
-test('handles general exception', function () {
+test('handles general exception', function (): void {
     $mockClient = $this->mock(Client::class);
     $exception = new Exception('Connection failed');
 
@@ -179,7 +179,7 @@ test('handles general exception', function () {
         ->and($result['error_code'])->toBeString();
 });
 
-test('handles timeout exception', function () {
+test('handles timeout exception', function (): void {
     $mockClient = $this->mock(Client::class);
     $exception = new Exception('Request timeout after 30 seconds');
 
@@ -200,7 +200,7 @@ test('handles timeout exception', function () {
         ->and($result['error_code'])->toBe('ERR_TIMEOUT');
 });
 
-test('handles connection exception', function () {
+test('handles connection exception', function (): void {
     $mockClient = $this->mock(Client::class);
     $exception = new Exception('Failed to connect to server');
 
@@ -221,7 +221,7 @@ test('handles connection exception', function () {
         ->and($result['error_code'])->toBe('ERR_CONNECTION');
 });
 
-test('tests connection successfully', function () {
+test('tests connection successfully', function (): void {
     $mockClient = $this->mock(Client::class);
     $mockClient->shouldReceive('get')
         ->once()

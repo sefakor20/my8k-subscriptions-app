@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1/webhooks/woocommerce')
     ->middleware(['verify.woocommerce.webhook'])
     ->controller(WooCommerceWebhookController::class)
-    ->group(function () {
+    ->group(function (): void {
         Route::post('order-completed', 'orderCompleted')->name('webhooks.woocommerce.order-completed');
         Route::post('subscription-renewed', 'subscriptionRenewed')->name('webhooks.woocommerce.subscription-renewed');
         Route::post('subscription-cancelled', 'subscriptionCancelled')->name('webhooks.woocommerce.subscription-cancelled');

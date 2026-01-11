@@ -9,7 +9,7 @@ use App\Models\ServiceAccount;
 use App\Models\Subscription;
 use App\Models\User;
 
-test('expires subscriptions that have passed their expiration date', function () {
+test('expires subscriptions that have passed their expiration date', function (): void {
     $user = User::factory()->create();
     $plan = Plan::factory()->create();
 
@@ -55,7 +55,7 @@ test('expires subscriptions that have passed their expiration date', function ()
     expect($activeSubscription->status)->toBe(SubscriptionStatus::Active);
 });
 
-test('handles expired subscriptions without service account', function () {
+test('handles expired subscriptions without service account', function (): void {
     $user = User::factory()->create();
     $plan = Plan::factory()->create();
 
@@ -79,7 +79,7 @@ test('handles expired subscriptions without service account', function () {
         ->and($expiredSubscription->auto_renew)->toBeFalse();
 });
 
-test('dry run mode does not make changes', function () {
+test('dry run mode does not make changes', function (): void {
     $user = User::factory()->create();
     $plan = Plan::factory()->create();
 
@@ -101,7 +101,7 @@ test('dry run mode does not make changes', function () {
     expect($expiredSubscription->status)->toBe(SubscriptionStatus::Active);
 });
 
-test('limit option restricts number of processed subscriptions', function () {
+test('limit option restricts number of processed subscriptions', function (): void {
     $user = User::factory()->create();
     $plan = Plan::factory()->create();
 
@@ -125,7 +125,7 @@ test('limit option restricts number of processed subscriptions', function () {
     expect($expiredCount)->toBe(2);
 });
 
-test('returns success when no expired subscriptions found', function () {
+test('returns success when no expired subscriptions found', function (): void {
     $user = User::factory()->create();
     $plan = Plan::factory()->create();
 

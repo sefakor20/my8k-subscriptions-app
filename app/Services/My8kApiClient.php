@@ -196,7 +196,7 @@ class My8kApiClient
             ->withHeaders([
                 'Accept' => 'application/json',
             ])
-            ->retry(3, 1000, function ($exception) {
+            ->retry(3, 1000, function (\Exception $exception): bool {
                 return $this->isRetryable($exception);
             });
     }
@@ -323,7 +323,7 @@ class My8kApiClient
             $context['error_code'] = $result['error_code'] ?? 'ERR_UNKNOWN';
         }
 
-        if ($exception) {
+        if ($exception instanceof \Exception) {
             $context['exception'] = [
                 'class' => get_class($exception),
                 'message' => $exception->getMessage(),

@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Services\My8kApiClient;
 use Illuminate\Support\Facades\Http;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config([
         'services.my8k.base_url' => 'https://my8k.me/api/api.php',
         'services.my8k.api_key' => 'test-api-key',
@@ -13,7 +13,7 @@ beforeEach(function () {
     ]);
 });
 
-test('creates m3u device successfully', function () {
+test('creates m3u device successfully', function (): void {
     Http::fake([
         '*' => Http::response([
             'status' => 'OK',
@@ -37,7 +37,7 @@ test('creates m3u device successfully', function () {
         ->and($result['data'])->toHaveKey('user_id')
         ->and($result['data']['user_id'])->toBe('MY8K_123456');
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), 'action=new')
             && str_contains($request->url(), 'type=m3u')
             && str_contains($request->url(), 'pack=PLAN_BASIC_M')
@@ -45,7 +45,7 @@ test('creates m3u device successfully', function () {
     });
 });
 
-test('renews m3u device successfully', function () {
+test('renews m3u device successfully', function (): void {
     Http::fake([
         '*' => Http::response([
             'status' => 'OK',
@@ -63,14 +63,14 @@ test('renews m3u device successfully', function () {
     expect($result)->toBeArray()
         ->and($result['success'])->toBeTrue();
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), 'action=renew')
             && str_contains($request->url(), 'type=m3u')
             && str_contains($request->url(), 'username=test_user');
     });
 });
 
-test('handles api error responses', function () {
+test('handles api error responses', function (): void {
     Http::fake([
         '*' => Http::response([
             'status' => 'ERROR',
@@ -89,8 +89,8 @@ test('handles api error responses', function () {
         ->and($result['error'])->toContain('Insufficient credits');
 });
 
-test('handles network timeouts', function () {
-    Http::fake(function () {
+test('handles network timeouts', function (): void {
+    Http::fake(function (): void {
         throw new \Illuminate\Http\Client\ConnectionException('Connection timeout');
     });
 
@@ -106,7 +106,7 @@ test('handles network timeouts', function () {
         ->and($result['retryable'])->toBeTrue();
 });
 
-test('handles http 500 errors', function () {
+test('handles http 500 errors', function (): void {
     Http::fake([
         '*' => Http::response(['status' => 'ERROR', 'error' => 'Server Error'], 500),
     ]);
@@ -123,7 +123,7 @@ test('handles http 500 errors', function () {
         ->and($result)->toHaveKey('retryable');
 })->skip('HTTP 500 error classification needs debug - see My8kApiClient.php:213');
 
-test('suspends device successfully', function () {
+test('suspends device successfully', function (): void {
     Http::fake([
         '*' => Http::response([
             'status' => 'OK',
@@ -137,14 +137,14 @@ test('suspends device successfully', function () {
     expect($result)->toBeArray()
         ->and($result['success'])->toBeTrue();
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), 'action=device_status')
             && str_contains($request->url(), 'id=MY8K_123456')
             && str_contains($request->url(), 'status=disable');
     });
 });
 
-test('reactivates device successfully', function () {
+test('reactivates device successfully', function (): void {
     Http::fake([
         '*' => Http::response([
             'status' => 'OK',
@@ -158,12 +158,12 @@ test('reactivates device successfully', function () {
     expect($result)->toBeArray()
         ->and($result['success'])->toBeTrue();
 
-    Http::assertSent(function ($request) {
+    Http::assertSent(function ($request): bool {
         return str_contains($request->url(), 'status=enable');
     });
 });
 
-test('gets device info successfully', function () {
+test('gets device info successfully', function (): void {
     Http::fake([
         '*' => Http::response([
             'status' => 'OK',
