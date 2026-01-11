@@ -119,4 +119,13 @@ class SubscriptionFactory extends Factory
             'next_renewal_at' => now()->addDays($plan->duration_days),
         ]);
     }
+
+    public function withServiceAccount(): static
+    {
+        return $this->afterCreating(function (\App\Models\Subscription $subscription) {
+            \App\Models\ServiceAccount::factory()->create([
+                'subscription_id' => $subscription->id,
+            ]);
+        });
+    }
 }

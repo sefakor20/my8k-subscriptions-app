@@ -107,4 +107,20 @@ class SubscriptionPolicy
         // Only admins can extend subscription expiry
         return $user->isAdmin();
     }
+
+    /**
+     * Determine whether the user can view credentials for a subscription.
+     */
+    public function viewCredentials(User $user, Subscription $subscription): bool
+    {
+        // Users can view credentials for their own active subscriptions
+        // Admins can view credentials for any subscription
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        return $user->id === $subscription->user_id
+               && $subscription->status === \App\Enums\SubscriptionStatus::Active
+               && $subscription->serviceAccount !== null;
+    }
 }
