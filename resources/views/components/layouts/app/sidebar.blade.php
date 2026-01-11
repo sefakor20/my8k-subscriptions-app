@@ -33,6 +33,10 @@
                             {{ __('Analytics') }}
                         </flux:sidebar.item>
 
+                        <flux:sidebar.item icon="credit-card" :href="route('admin.credits')" :current="request()->routeIs('admin.credits')" wire:navigate>
+                            {{ __('Credits') }}
+                        </flux:sidebar.item>
+
                         <flux:sidebar.item icon="rectangle-stack" :href="route('admin.subscriptions.index')" :current="request()->routeIs('admin.subscriptions.*')" wire:navigate>
                             {{ __('Subscriptions') }}
                         </flux:sidebar.item>

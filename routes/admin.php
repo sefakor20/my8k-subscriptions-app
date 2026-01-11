@@ -8,6 +8,7 @@ use App\Livewire\Admin\FailedJobsList;
 use App\Livewire\Admin\OrdersList;
 use App\Livewire\Admin\PlansList;
 use App\Livewire\Admin\ProvisioningLogsList;
+use App\Livewire\Admin\ResellerCreditsManagement;
 use App\Livewire\Admin\SubscriptionsList;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,9 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function (): void {
 
     // Analytics route
     Route::get('/analytics', Analytics::class)->name('admin.analytics');
+
+    // Reseller credits management route
+    Route::get('/credits', ResellerCreditsManagement::class)->name('admin.credits');
 
     // Subscriptions management routes
     Route::get('/subscriptions', SubscriptionsList::class)->name('admin.subscriptions.index');

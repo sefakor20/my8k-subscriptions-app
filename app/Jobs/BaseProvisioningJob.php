@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\ProvisioningLog;
 use App\Models\ServiceAccount;
 use App\Models\Subscription;
+use App\Services\Admin\ResellerCreditsService;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -88,7 +89,7 @@ abstract class BaseProvisioningJob implements ShouldQueue
     {
         $models = $this->getRelatedModels();
 
-        $this->createProvisioningLog(
+        $provisioningLog = $this->createProvisioningLog(
             status: ProvisioningStatus::Success,
             attemptNumber: $attemptNumber,
             request: $result['request'] ?? [],
@@ -103,6 +104,40 @@ abstract class BaseProvisioningJob implements ShouldQueue
             'subscription_id' => $models['subscription_id'] ?? null,
             'order_id' => $models['order_id'] ?? null,
         ]);
+
+        // Log credit usage after successful provisioning
+        $this->logCreditUsage($provisioningLog);
+    }
+
+    /**
+     * Log credit usage after successful provisioning
+     */
+    protected function logCreditUsage(ProvisioningLog $provisioningLog): void
+    {
+        try {
+            $creditsService = app(ResellerCreditsService::class);
+            $reason = sprintf(
+                '%s operation for subscription %s',
+                $this->getProvisioningAction()->label(),
+                $provisioningLog->subscription_id ?? 'unknown',
+            );
+
+            $creditsService->logBalanceSnapshot(
+                reason: $reason,
+                provisioningLogId: (int) $provisioningLog->id,
+            );
+
+            Log::debug('Credit usage logged', [
+                'provisioning_log_id' => $provisioningLog->id,
+                'action' => $this->getProvisioningAction()->value,
+            ]);
+        } catch (Exception $e) {
+            // Don't fail the job if credit logging fails
+            Log::warning('Failed to log credit usage', [
+                'provisioning_log_id' => $provisioningLog->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

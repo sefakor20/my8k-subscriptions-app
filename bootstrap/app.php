@@ -69,6 +69,12 @@ return Application::configure(basePath: dirname(__DIR__))
             ->at('10:00')
             ->withoutOverlapping()
             ->runInBackground();
+
+        // Check reseller credit balance and send alerts if needed
+        $schedule->command('credits:check-balance')
+            ->everySixHours()
+            ->withoutOverlapping()
+            ->runInBackground();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

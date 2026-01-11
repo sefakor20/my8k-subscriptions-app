@@ -42,6 +42,11 @@
         />
     </div>
 
+    {{-- Reseller Credits Widget --}}
+    <div class="mt-8">
+        <livewire:admin.reseller-credits-widget />
+    </div>
+
     {{-- Auto-refresh Indicator --}}
     <div class="mt-6 flex items-center justify-end">
         <flux:text variant="muted" size="sm" class="flex items-center gap-2">
