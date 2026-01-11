@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Application;
+use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\VerifyWooCommerceWebhook;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
+            'admin' => EnsureUserIsAdmin::class,
             'verify.woocommerce.webhook' => VerifyWooCommerceWebhook::class,
         ]);
     })

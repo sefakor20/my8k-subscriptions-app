@@ -56,6 +56,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'is_admin' => 'boolean',
         ];
     }
 
@@ -101,5 +102,13 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    /**
+     * Check if the user is an admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->is_admin;
     }
 }
