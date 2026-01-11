@@ -6,6 +6,7 @@ use Illuminate\Foundation\Application;
 use App\Http\Middleware\VerifyWooCommerceWebhook;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Console\Scheduling\Schedule;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,6 +19,29 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'verify.woocommerce.webhook' => VerifyWooCommerceWebhook::class,
         ]);
+    })
+    ->withSchedule(function (Schedule $schedule): void {
+        // Expire subscriptions that have passed their expiration date
+        $schedule->command('subscriptions:expire')
+            ->daily()
+            ->at('01:00')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        // Reconcile WooCommerce orders to catch missed webhooks
+        $schedule->command('woocommerce:reconcile-orders')
+            ->daily()
+            ->at('02:00')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        // Clean up old provisioning logs (runs weekly on Sunday)
+        $schedule->command('logs:cleanup')
+            ->weekly()
+            ->sundays()
+            ->at('03:00')
+            ->withoutOverlapping()
+            ->runInBackground();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
