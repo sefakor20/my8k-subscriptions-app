@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Livewire\Admin\Dashboard;
+use App\Livewire\Admin\SubscriptionsList;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,8 +20,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'verified', 'admin'])->group(function (): void {
     Route::get('/dashboard', Dashboard::class)->name('admin.dashboard');
 
-    // Subscriptions management routes (to be implemented)
-    // Route::get('/subscriptions', SubscriptionsList::class)->name('admin.subscriptions.index');
+    // Subscriptions management routes
+    Route::get('/subscriptions', SubscriptionsList::class)->name('admin.subscriptions.index');
 
     // Orders management routes (to be implemented)
     // Route::get('/orders', OrdersList::class)->name('admin.orders.index');

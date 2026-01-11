@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto" wire:poll.60s>
+<div class="w-full" wire:poll.60s>
     {{-- Page Header --}}
     <div class="mb-8">
         <flux:heading size="xl" class="font-bold">Admin Dashboard</flux:heading>
