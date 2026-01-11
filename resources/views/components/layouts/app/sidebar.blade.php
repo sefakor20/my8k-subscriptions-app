@@ -37,11 +37,11 @@
                             {{ __('Failed Jobs') }}
                         </flux:sidebar.item>
 
-                        <flux:sidebar.item icon="document-text" href="#" :current="request()->routeIs('admin.provisioning-logs.*')" wire:navigate>
+                        <flux:sidebar.item icon="document-text" :href="route('admin.provisioning-logs.index')" :current="request()->routeIs('admin.provisioning-logs.*')" wire:navigate>
                             {{ __('Provisioning Logs') }}
                         </flux:sidebar.item>
 
-                        <flux:sidebar.item icon="tag" href="#" :current="request()->routeIs('admin.plans.*')" wire:navigate>
+                        <flux:sidebar.item icon="tag" :href="route('admin.plans.index')" :current="request()->routeIs('admin.plans.*')" wire:navigate>
                             {{ __('Plans') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>

@@ -184,13 +184,6 @@
         @endif
     </div>
 
-    {{-- Loading Indicator --}}
-    <div wire:loading class="fixed inset-0 bg-black/20 dark:bg-black/40 flex items-center justify-center z-50">
-        <div class="bg-white dark:bg-zinc-900 rounded-lg p-6 shadow-xl">
-            <flux:icon.arrow-path class="size-8 text-blue-600 animate-spin" />
-        </div>
-    </div>
-
     {{-- Failed Job Detail Modal --}}
     <livewire:admin.failed-job-detail-modal />
 </div>

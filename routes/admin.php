@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\FailedJobsList;
 use App\Livewire\Admin\OrdersList;
+use App\Livewire\Admin\PlansList;
+use App\Livewire\Admin\ProvisioningLogsList;
 use App\Livewire\Admin\SubscriptionsList;
 use Illuminate\Support\Facades\Route;
 
@@ -31,9 +33,9 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function (): void {
     // Failed jobs management routes
     Route::get('/failed-jobs', FailedJobsList::class)->name('admin.failed-jobs.index');
 
-    // Provisioning logs routes (to be implemented)
-    // Route::get('/provisioning-logs', ProvisioningLogsList::class)->name('admin.provisioning-logs.index');
+    // Provisioning logs routes
+    Route::get('/provisioning-logs', ProvisioningLogsList::class)->name('admin.provisioning-logs.index');
 
-    // Plans management routes (to be implemented)
-    // Route::get('/plans', PlansList::class)->name('admin.plans.index');
+    // Plans management routes
+    Route::get('/plans', PlansList::class)->name('admin.plans.index');
 });

@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\BillingInterval;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Number;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Plan extends Model
 {
@@ -72,6 +73,8 @@ class Plan extends Model
 
         $symbol = $symbols[$this->currency] ?? $this->currency;
 
-        return $symbol . number_format($this->price, 2);
+        // return $symbol . number_format($this->price, 2);
+
+        return Number::currency(floatval($this->price), precision: 2, locale: $symbol);
     }
 }
