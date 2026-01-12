@@ -13,11 +13,15 @@
             <flux:sidebar.nav>
                 <flux:sidebar.group :heading="__('My Account')" class="grid">
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('My Subscriptions') }}
+                        {{ __('Subscriptions') }}
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="shopping-bag" :href="route('orders.index')" :current="request()->routeIs('orders.*')" wire:navigate>
-                        {{ __('My Orders') }}
+                        {{ __('Orders') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="chat-bubble-left-right" :href="route('support.my-tickets')" :current="request()->routeIs('support.*')" wire:navigate>
+                        {{ __('Support Tickets') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
 
@@ -55,6 +59,10 @@
 
                         <flux:sidebar.item icon="tag" :href="route('admin.plans.index')" :current="request()->routeIs('admin.plans.*')" wire:navigate>
                             {{ __('Plans') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="chat-bubble-left-right" :href="route('admin.support.tickets')" :current="request()->routeIs('admin.support.*')" wire:navigate>
+                            {{ __('Support Tickets') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endif

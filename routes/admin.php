@@ -10,6 +10,7 @@ use App\Livewire\Admin\PlansList;
 use App\Livewire\Admin\ProvisioningLogsList;
 use App\Livewire\Admin\ResellerCreditsManagement;
 use App\Livewire\Admin\SubscriptionsList;
+use App\Livewire\Admin\SupportTicketsList;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,4 +47,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function (): void {
 
     // Plans management routes
     Route::get('/plans', PlansList::class)->name('admin.plans.index');
+
+    // Support tickets routes
+    Route::get('/support/tickets', SupportTicketsList::class)->name('admin.support.tickets');
 });
