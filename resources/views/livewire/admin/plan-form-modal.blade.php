@@ -158,6 +158,14 @@
                         <flux:error name="is_active" />
                     </flux:field>
                 </div>
+
+                {{-- Gateway Pricing (Edit Mode Only) --}}
+                @if ($mode === 'edit' && $planId)
+                    <div class="border-t border-zinc-200 dark:border-zinc-700 pt-6">
+                        <flux:heading size="sm" class="mb-4">Gateway Pricing</flux:heading>
+                        <livewire:admin.plan-pricing-manager :plan-id="$planId" :key="'pricing-'.$planId" />
+                    </div>
+                @endif
             </div>
 
             {{-- Action Buttons --}}
