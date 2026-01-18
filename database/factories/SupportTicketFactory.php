@@ -99,6 +99,13 @@ class SupportTicketFactory extends Factory
         ]);
     }
 
+    public function open(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'status' => TicketStatus::Open,
+        ]);
+    }
+
     public function technical(): static
     {
         return $this->state(fn(array $attributes) => [
