@@ -46,7 +46,7 @@ class WooCommerceWebhookHandler
         // Create new user
         $firstName = $billing['first_name'] ?? '';
         $lastName = $billing['last_name'] ?? '';
-        $name = trim("{$firstName} {$lastName}") ?: 'Customer';
+        $name = mb_trim("{$firstName} {$lastName}") ?: 'Customer';
 
         $user = User::create([
             'name' => $name,

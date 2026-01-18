@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\PaystackWebhookController;
+use App\Http\Controllers\Api\StripeWebhookController;
 use App\Http\Controllers\Api\WooCommerceWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,4 +16,20 @@ Route::prefix('v1/webhooks/woocommerce')
         Route::post('subscription-renewed', 'subscriptionRenewed')->name('webhooks.woocommerce.subscription-renewed');
         Route::post('subscription-cancelled', 'subscriptionCancelled')->name('webhooks.woocommerce.subscription-cancelled');
         Route::post('payment-failed', 'paymentFailed')->name('webhooks.woocommerce.payment-failed');
+    });
+
+// Paystack Webhook Routes
+Route::prefix('v1/webhooks/paystack')
+    ->middleware(['verify.paystack.webhook'])
+    ->controller(PaystackWebhookController::class)
+    ->group(function (): void {
+        Route::post('/', 'handle')->name('webhooks.paystack');
+    });
+
+// Stripe Webhook Routes
+Route::prefix('v1/webhooks/stripe')
+    ->middleware(['verify.stripe.webhook'])
+    ->controller(StripeWebhookController::class)
+    ->group(function (): void {
+        Route::post('/', 'handle')->name('webhooks.stripe');
     });

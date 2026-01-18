@@ -28,6 +28,8 @@ class Plan extends Model
         'features',
         'is_active',
         'woocommerce_id',
+        'paystack_plan_code',
+        'stripe_price_id',
         'my8k_plan_code',
     ];
 
@@ -65,16 +67,6 @@ class Plan extends Model
      */
     public function formattedPrice(): string
     {
-        $symbols = [
-            'USD' => '$',
-            'EUR' => '€',
-            'GBP' => '£',
-        ];
-
-        $symbol = $symbols[$this->currency] ?? $this->currency;
-
-        // return $symbol . number_format($this->price, 2);
-
-        return Number::currency(floatval($this->price), precision: 2, locale: $symbol);
+        return Number::currency(floatval($this->price), in: $this->currency);
     }
 }

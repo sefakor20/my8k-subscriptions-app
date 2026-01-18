@@ -87,7 +87,7 @@ class SubscriptionDetail extends Component
 
         return sprintf(
             '%s/get.php?username=%s&password=%s&type=m3u_plus&output=ts',
-            rtrim($account->server_url, '/'),
+            mb_rtrim($account->server_url, '/'),
             $account->username,
             $account->password,
         );
@@ -106,7 +106,7 @@ class SubscriptionDetail extends Component
 
         return sprintf(
             '%s/xmltv.php?username=%s&password=%s',
-            rtrim($account->server_url, '/'),
+            mb_rtrim($account->server_url, '/'),
             $account->username,
             $account->password,
         );

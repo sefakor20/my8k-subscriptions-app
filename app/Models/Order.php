@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentGateway;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +25,10 @@ class Order extends Model
         'amount',
         'currency',
         'payment_method',
+        'payment_gateway',
+        'gateway_transaction_id',
+        'gateway_session_id',
+        'gateway_metadata',
         'paid_at',
         'provisioned_at',
         'idempotency_key',
@@ -37,10 +42,12 @@ class Order extends Model
             'subscription_id' => 'string',
             'user_id' => 'string',
             'status' => OrderStatus::class,
+            'payment_gateway' => PaymentGateway::class,
             'amount' => 'decimal:2',
             'paid_at' => 'datetime',
             'provisioned_at' => 'datetime',
             'webhook_payload' => 'array',
+            'gateway_metadata' => 'array',
         ];
     }
 
