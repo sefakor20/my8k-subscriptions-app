@@ -6,19 +6,26 @@ namespace App\Http\Controllers;
 
 use App\Enums\PaymentGateway;
 use App\Enums\PaymentTransactionStatus;
+use App\Jobs\ProvisionNewAccountJob;
+use App\Mail\WelcomeNewCustomer;
 use App\Models\PaymentTransaction;
 use App\Models\Plan;
+use App\Models\User;
 use App\Services\PaymentGatewayManager;
+use App\Services\SubscriptionOrderService;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
-use Exception;
 
 class CheckoutController extends Controller
 {
     public function __construct(
         private PaymentGatewayManager $gatewayManager,
+        private SubscriptionOrderService $subscriptionService,
     ) {}
 
     /**
@@ -139,9 +146,18 @@ class CheckoutController extends Controller
             $result = $gatewayInstance->verifyPayment($reference);
 
             if ($result['success']) {
+                // Create subscription and order (idempotent)
+                $creationResult = $this->createSubscriptionFromCallback(
+                    $gatewayEnum,
+                    $reference,
+                    $result['data'] ?? [],
+                );
+
                 return view('checkout.success', [
                     'reference' => $reference,
                     'gateway' => $gateway,
+                    'subscription' => $creationResult['subscription'] ?? null,
+                    'order' => $creationResult['order'] ?? null,
                 ]);
             } else {
                 return view('checkout.failed', [
@@ -203,5 +219,147 @@ class CheckoutController extends Controller
             'is_complete' => $transaction->status->isTerminal(),
             'is_successful' => $transaction->isSuccessful(),
         ]);
+    }
+
+    /**
+     * Create subscription from callback verification data.
+     *
+     * @param  array<string, mixed>  $verificationData
+     * @return array<string, mixed>
+     */
+    private function createSubscriptionFromCallback(
+        PaymentGateway $gateway,
+        string $reference,
+        array $verificationData,
+    ): array {
+        // Extract email and plan from verification data or pending transaction
+        $transaction = PaymentTransaction::where('reference', $reference)->first();
+
+        // Get email from verification data or transaction user
+        $email = $this->extractEmail($gateway, $verificationData, $transaction);
+
+        // Get plan from verification data metadata or transaction
+        $plan = $this->extractPlan($gateway, $verificationData, $transaction);
+
+        if (! $email || ! $plan) {
+            Log::warning('Cannot create subscription from callback - missing data', [
+                'gateway' => $gateway->value,
+                'reference' => $reference,
+                'has_email' => (bool) $email,
+                'has_plan' => (bool) $plan,
+            ]);
+
+            return ['success' => false, 'message' => 'Missing required data'];
+        }
+
+        // Prepare payment data for order creation
+        $paymentData = $this->preparePaymentData($gateway, $verificationData);
+
+        $result = $this->subscriptionService->createSubscriptionAndOrder(
+            $gateway,
+            $reference,
+            $email,
+            $plan,
+            $paymentData,
+        );
+
+        // Dispatch provisioning job if newly created (not duplicate)
+        if ($result['success'] && ! $result['duplicate']) {
+            ProvisionNewAccountJob::dispatch(
+                orderId: $result['order']->id,
+                subscriptionId: $result['subscription']->id,
+                planId: $plan->id,
+            );
+
+            // Send welcome email if new user
+            if ($result['user_was_created'] ?? false) {
+                $this->sendWelcomeEmail($result['user']);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Extract email from verification data.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function extractEmail(PaymentGateway $gateway, array $data, ?PaymentTransaction $transaction): ?string
+    {
+        return match ($gateway) {
+            PaymentGateway::Paystack => $data['customer']['email'] ?? $transaction?->user?->email,
+            PaymentGateway::Stripe => $data['customer_email'] ?? $data['customer_details']['email'] ?? $transaction?->user?->email,
+            default => $transaction?->user?->email,
+        };
+    }
+
+    /**
+     * Extract plan from verification data.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function extractPlan(PaymentGateway $gateway, array $data, ?PaymentTransaction $transaction): ?Plan
+    {
+        $planId = match ($gateway) {
+            PaymentGateway::Paystack => $data['metadata']['plan_id'] ?? null,
+            PaymentGateway::Stripe => $data['metadata']['plan_id'] ?? null,
+            default => null,
+        };
+
+        // Fallback to transaction metadata if available
+        if (! $planId && $transaction) {
+            $planId = $transaction->gateway_response['metadata']['plan_id'] ?? null;
+        }
+
+        return $planId ? Plan::find($planId) : null;
+    }
+
+    /**
+     * Prepare payment data for order creation.
+     *
+     * @param  array<string, mixed>  $verificationData
+     * @return array<string, mixed>
+     */
+    private function preparePaymentData(PaymentGateway $gateway, array $verificationData): array
+    {
+        return match ($gateway) {
+            PaymentGateway::Paystack => [
+                'amount' => $verificationData['amount'] ?? 0,
+                'currency' => $verificationData['currency'] ?? 'GHS',
+                'channel' => $verificationData['channel'] ?? 'card',
+                'customer' => $verificationData['customer'] ?? [],
+                'authorization' => $verificationData['authorization'] ?? null,
+                'metadata' => $verificationData['metadata'] ?? [],
+            ],
+            PaymentGateway::Stripe => [
+                'amount_total' => $verificationData['amount_total'] ?? 0,
+                'currency' => $verificationData['currency'] ?? 'usd',
+                'payment_intent' => $verificationData['payment_intent'] ?? null,
+                'customer' => $verificationData['customer'] ?? null,
+                'customer_details' => $verificationData['customer_details'] ?? [],
+                'customer_email' => $verificationData['customer_email'] ?? null,
+                'metadata' => $verificationData['metadata'] ?? [],
+            ],
+            default => $verificationData,
+        };
+    }
+
+    /**
+     * Send welcome email to new user.
+     */
+    private function sendWelcomeEmail(User $user): void
+    {
+        try {
+            $token = Password::createToken($user);
+            $passwordResetUrl = url("/reset-password/{$token}?email=" . urlencode($user->email));
+
+            Mail::to($user->email)->send(new WelcomeNewCustomer($user, $passwordResetUrl));
+        } catch (Exception $e) {
+            Log::error('Failed to send welcome email', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

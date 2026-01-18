@@ -161,7 +161,7 @@ class StripeGateway implements PaymentGatewayContract
     public function getSupportedCurrencies(): array
     {
         // Stripe supports 135+ currencies
-        return ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'NGN', 'GHS', 'ZAR', 'KES'];
+        return ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'GHS', 'GHS', 'ZAR', 'KES'];
     }
 
     public function processRefund(Order $order, ?float $amount = null): array

@@ -47,7 +47,7 @@ class PaystackGateway implements PaymentGatewayContract
         $response = $this->client->initializeTransaction([
             'email' => $user->email,
             'amount' => $amountInKobo,
-            'currency' => $plan->currency ?? config('services.paystack.currency', 'NGN'),
+            'currency' => $plan->currency ?? config('services.paystack.currency', 'GHS'),
             'reference' => $reference,
             'callback_url' => $callbackUrl,
             'metadata' => array_merge([
@@ -142,7 +142,7 @@ class PaystackGateway implements PaymentGatewayContract
 
     public function getSupportedCurrencies(): array
     {
-        return ['NGN', 'GHS', 'ZAR', 'USD', 'KES'];
+        return ['GHS', 'GHS', 'ZAR', 'USD', 'KES'];
     }
 
     public function processRefund(Order $order, ?float $amount = null): array

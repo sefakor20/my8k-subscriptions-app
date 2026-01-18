@@ -48,7 +48,7 @@ test('paystack charge.success webhook creates order and dispatches provisioning'
     $plan = Plan::factory()->create([
         'is_active' => true,
         'price' => 29.99,
-        'currency' => 'NGN',
+        'currency' => 'GHS',
     ]);
 
     $payload = [
@@ -56,7 +56,7 @@ test('paystack charge.success webhook creates order and dispatches provisioning'
         'data' => [
             'reference' => 'PS_TEST_' . time(),
             'amount' => 2999, // kobo
-            'currency' => 'NGN',
+            'currency' => 'GHS',
             'channel' => 'card',
             'customer' => [
                 'email' => 'customer@example.com',
@@ -106,7 +106,7 @@ test('paystack charge.success webhook handles duplicate transactions', function 
         'data' => [
             'reference' => $reference,
             'amount' => 2999,
-            'currency' => 'NGN',
+            'currency' => 'GHS',
             'channel' => 'card',
             'customer' => [
                 'email' => 'existing@example.com',

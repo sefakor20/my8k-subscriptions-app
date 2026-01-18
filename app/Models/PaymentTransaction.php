@@ -111,7 +111,7 @@ class PaymentTransaction extends Model
             'USD' => '$',
             'EUR' => '€',
             'GBP' => '£',
-            'NGN' => '₦',
+            'GHS' => '₦',
             'GHS' => 'GH₵',
             'KES' => 'KSh',
             'ZAR' => 'R',

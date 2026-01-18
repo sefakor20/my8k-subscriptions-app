@@ -30,7 +30,7 @@ class PaymentTransactionFactory extends Factory
             'gateway_transaction_id' => Str::uuid()->toString(),
             'status' => PaymentTransactionStatus::Pending,
             'amount' => fake()->randomFloat(2, 10, 500),
-            'currency' => fake()->randomElement(['USD', 'NGN', 'GHS', 'EUR']),
+            'currency' => fake()->randomElement(['USD', 'GHS', 'GHS', 'EUR']),
             'gateway_response' => null,
             'webhook_payload' => null,
             'verified_at' => null,
@@ -67,7 +67,7 @@ class PaymentTransactionFactory extends Factory
     {
         return $this->state(fn(array $attributes) => [
             'payment_gateway' => PaymentGateway::Paystack,
-            'currency' => 'NGN',
+            'currency' => 'GHS',
             'reference' => 'PS_' . Str::upper(Str::random(12)),
         ]);
     }
