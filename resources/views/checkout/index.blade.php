@@ -1,5 +1,5 @@
 <x-layouts.app>
-    <div class="max-w-4xl mx-auto py-8 px-4">
+    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {{-- Page Header --}}
         <div class="mb-8 text-center">
             <flux:heading size="xl" class="font-bold">Choose a Plan</flux:heading>

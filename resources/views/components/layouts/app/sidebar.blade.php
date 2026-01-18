@@ -13,7 +13,7 @@
             <flux:sidebar.nav>
                 <flux:sidebar.group :heading="__('My Account')" class="grid">
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Subscriptions') }}
+                        {{ __('Overview') }}
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="shopping-bag" :href="route('orders.index')" :current="request()->routeIs('orders.*')" wire:navigate>
@@ -22,6 +22,10 @@
 
                     <flux:sidebar.item icon="chat-bubble-left-right" :href="route('support.my-tickets')" :current="request()->routeIs('support.*')" wire:navigate>
                         {{ __('Support Tickets') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="credit-card" :href="route('checkout.index')" :current="request()->routeIs('checkout.*')" wire:navigate>
+                        {{ __('Subscribe') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
 
