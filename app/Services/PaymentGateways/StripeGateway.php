@@ -41,9 +41,12 @@ class StripeGateway implements PaymentGatewayContract
         $successUrl = route('checkout.callback', ['gateway' => 'stripe']) . '?session_id={CHECKOUT_SESSION_ID}';
         $cancelUrl = route('checkout.cancel');
 
+        // Get gateway-specific currency and price
+        $currency = mb_strtolower($plan->getCurrencyFor('stripe'));
+        $price = $plan->getAmountFor('stripe', mb_strtoupper($currency));
+
         // Convert amount to cents (Stripe expects amount in smallest unit)
-        $amountInCents = (int) ($plan->price * 100);
-        $currency = mb_strtolower($plan->currency ?? config('services.stripe.currency', 'USD'));
+        $amountInCents = (int) ($price * 100);
 
         $sessionParams = [
             'payment_method_types' => ['card'],

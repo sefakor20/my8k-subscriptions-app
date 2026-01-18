@@ -41,13 +41,17 @@ class PaystackGateway implements PaymentGatewayContract
         $reference = $this->generateReference();
         $callbackUrl = route('checkout.callback', ['gateway' => 'paystack']);
 
+        // Get gateway-specific currency and price
+        $currency = $plan->getCurrencyFor('paystack');
+        $price = $plan->getAmountFor('paystack', $currency);
+
         // Convert amount to kobo (Paystack expects amount in smallest unit)
-        $amountInKobo = (int) ($plan->price * 100);
+        $amountInKobo = (int) ($price * 100);
 
         $response = $this->client->initializeTransaction([
             'email' => $user->email,
             'amount' => $amountInKobo,
-            'currency' => $plan->currency ?? config('services.paystack.currency', 'GHS'),
+            'currency' => $currency,
             'reference' => $reference,
             'callback_url' => $callbackUrl,
             'metadata' => array_merge([
