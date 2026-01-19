@@ -21,6 +21,7 @@ class SubscriptionRenewalService
 {
     public function __construct(
         private PaymentGatewayManager $gatewayManager,
+        private InvoiceService $invoiceService,
     ) {}
 
     /**
@@ -69,6 +70,17 @@ class SubscriptionRenewalService
             // Create renewal order and extend subscription
             $order = $this->createRenewalOrder($subscription, $lastOrder, $chargeResult);
             $this->extendSubscription($subscription);
+
+            // Generate and send invoice
+            try {
+                $this->invoiceService->processOrderInvoice($order);
+            } catch (Throwable $e) {
+                Log::error('Failed to process invoice for renewal', [
+                    'subscription_id' => $subscription->id,
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             // Send success notification
             $this->sendRenewalSuccessNotification($subscription, $order);

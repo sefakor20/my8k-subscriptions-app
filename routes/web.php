@@ -15,6 +15,7 @@ Route::view('dashboard', 'dashboard')
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/orders', \App\Livewire\Dashboard\MyOrders::class)->name('orders.index');
+    Route::get('/invoices', \App\Livewire\Dashboard\MyInvoices::class)->name('invoices.index');
 
     // Support Tickets
     Route::get('/support/my-tickets', \App\Livewire\Customer\MyTickets::class)->name('support.my-tickets');

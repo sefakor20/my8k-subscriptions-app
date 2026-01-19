@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Livewire\Admin\Analytics;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\FailedJobsList;
+use App\Livewire\Admin\InvoicesList;
 use App\Livewire\Admin\OrdersList;
 use App\Livewire\Admin\PlansList;
 use App\Livewire\Admin\ProvisioningLogsList;
@@ -38,6 +39,9 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function (): void {
 
     // Orders management routes
     Route::get('/orders', OrdersList::class)->name('admin.orders.index');
+
+    // Invoices management routes
+    Route::get('/invoices', InvoicesList::class)->name('admin.invoices.index');
 
     // Failed jobs management routes
     Route::get('/failed-jobs', FailedJobsList::class)->name('admin.failed-jobs.index');

@@ -11,6 +11,7 @@ use App\Mail\WelcomeNewCustomer;
 use App\Models\PaymentTransaction;
 use App\Models\Plan;
 use App\Models\User;
+use App\Services\InvoiceService;
 use App\Services\PaymentGatewayManager;
 use App\Services\SubscriptionOrderService;
 use Exception;
@@ -26,6 +27,7 @@ class CheckoutController extends Controller
     public function __construct(
         private PaymentGatewayManager $gatewayManager,
         private SubscriptionOrderService $subscriptionService,
+        private InvoiceService $invoiceService,
     ) {}
 
     /**
@@ -270,6 +272,16 @@ class CheckoutController extends Controller
                 subscriptionId: $result['subscription']->id,
                 planId: $plan->id,
             );
+
+            // Generate and send invoice
+            try {
+                $this->invoiceService->processOrderInvoice($result['order']);
+            } catch (Exception $e) {
+                Log::error('Failed to process invoice for checkout', [
+                    'order_id' => $result['order']->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             // Send welcome email if new user
             if ($result['user_was_created'] ?? false) {

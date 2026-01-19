@@ -20,6 +20,10 @@
                         {{ __('Orders') }}
                     </flux:sidebar.item>
 
+                    <flux:sidebar.item icon="document-text" :href="route('invoices.index')" :current="request()->routeIs('invoices.*')" wire:navigate>
+                        {{ __('Invoices') }}
+                    </flux:sidebar.item>
+
                     <flux:sidebar.item icon="credit-card" :href="route('checkout.index')" :current="request()->routeIs('checkout.*')" wire:navigate>
                         {{ __('Subscribe') }}
                     </flux:sidebar.item>
@@ -51,6 +55,10 @@
 
                         <flux:sidebar.item icon="shopping-cart" :href="route('admin.orders.index')" :current="request()->routeIs('admin.orders.*')" wire:navigate>
                             {{ __('Orders') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="receipt-percent" :href="route('admin.invoices.index')" :current="request()->routeIs('admin.invoices.*')" wire:navigate>
+                            {{ __('Invoices') }}
                         </flux:sidebar.item>
 
                         <flux:sidebar.item icon="exclamation-triangle" :href="route('admin.failed-jobs.index')" :current="request()->routeIs('admin.failed-jobs.*')" wire:navigate>

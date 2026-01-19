@@ -77,6 +77,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get all invoices for this user
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    /**
      * Get all service accounts for this user
      */
     public function serviceAccounts(): HasMany
