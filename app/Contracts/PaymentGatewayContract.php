@@ -73,4 +73,13 @@ interface PaymentGatewayContract
      * @return array{success: bool, refund_id?: string, error?: string}
      */
     public function processRefund(Order $order, ?float $amount = null): array;
+
+    /**
+     * Charge a recurring payment using stored authorization.
+     *
+     * @param  array<string, mixed>  $authorizationData  Gateway-specific authorization data (e.g., authorization_code for Paystack, customer ID for Stripe)
+     * @param  array<string, mixed>  $metadata
+     * @return array{success: bool, reference?: string, transaction_id?: string, data?: array<string, mixed>, error?: string}
+     */
+    public function chargeRecurring(array $authorizationData, float $amount, string $currency, array $metadata = []): array;
 }

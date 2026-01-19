@@ -212,4 +212,65 @@ class PaystackGateway implements PaymentGatewayContract
     {
         return (int) ($amount * 100);
     }
+
+    /**
+     * Charge a recurring payment using stored authorization code.
+     *
+     * @param  array<string, mixed>  $authorizationData  Must contain 'authorization_code' and 'email'
+     * @param  array<string, mixed>  $metadata
+     * @return array{success: bool, reference?: string, transaction_id?: string, data?: array<string, mixed>, error?: string}
+     */
+    public function chargeRecurring(array $authorizationData, float $amount, string $currency, array $metadata = []): array
+    {
+        try {
+            $authorizationCode = $authorizationData['authorization_code'] ?? null;
+            $email = $authorizationData['email'] ?? null;
+
+            if (empty($authorizationCode) || empty($email)) {
+                return [
+                    'success' => false,
+                    'error' => 'Missing authorization_code or email for recurring charge',
+                ];
+            }
+
+            $reference = $this->generateReference();
+            $amountInKobo = $this->convertToSmallestUnit($amount);
+
+            $response = $this->client->chargeAuthorization([
+                'authorization_code' => $authorizationCode,
+                'email' => $email,
+                'amount' => $amountInKobo,
+                'currency' => $currency,
+                'reference' => $reference,
+                'metadata' => $metadata,
+            ]);
+
+            $success = $response['status'] === true
+                && ($response['data']['status'] ?? '') === 'success';
+
+            Log::info('Paystack recurring charge', [
+                'reference' => $reference,
+                'success' => $success,
+                'status' => $response['data']['status'] ?? 'unknown',
+            ]);
+
+            return [
+                'success' => $success,
+                'reference' => $reference,
+                'transaction_id' => (string) ($response['data']['id'] ?? ''),
+                'data' => $response['data'] ?? [],
+            ];
+        } catch (Exception $e) {
+            Log::error('Paystack recurring charge failed', [
+                'error' => $e->getMessage(),
+                'amount' => $amount,
+                'currency' => $currency,
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
 }

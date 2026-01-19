@@ -20,12 +20,12 @@
                         {{ __('Orders') }}
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="chat-bubble-left-right" :href="route('support.my-tickets')" :current="request()->routeIs('support.*')" wire:navigate>
-                        {{ __('Support Tickets') }}
-                    </flux:sidebar.item>
-
                     <flux:sidebar.item icon="credit-card" :href="route('checkout.index')" :current="request()->routeIs('checkout.*')" wire:navigate>
                         {{ __('Subscribe') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="chat-bubble-left-right" :href="route('support.my-tickets')" :current="request()->routeIs('support.*')" wire:navigate>
+                        {{ __('Support Tickets') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
 

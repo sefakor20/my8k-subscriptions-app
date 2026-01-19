@@ -230,4 +230,77 @@ class StripeGateway implements PaymentGatewayContract
     {
         return $this->client->retrieveCheckoutSession($sessionId);
     }
+
+    /**
+     * Charge a recurring payment using stored customer ID.
+     *
+     * @param  array<string, mixed>  $authorizationData  Must contain 'customer' (Stripe customer ID)
+     * @param  array<string, mixed>  $metadata
+     * @return array{success: bool, reference?: string, transaction_id?: string, data?: array<string, mixed>, error?: string}
+     */
+    public function chargeRecurring(array $authorizationData, float $amount, string $currency, array $metadata = []): array
+    {
+        try {
+            $customerId = $authorizationData['customer'] ?? null;
+            $paymentMethodId = $authorizationData['payment_method'] ?? null;
+
+            if (empty($customerId)) {
+                return [
+                    'success' => false,
+                    'error' => 'Missing customer ID for recurring charge',
+                ];
+            }
+
+            $amountInCents = $this->convertToSmallestUnit($amount);
+
+            $paymentIntentParams = [
+                'customer' => $customerId,
+                'amount' => $amountInCents,
+                'currency' => mb_strtolower($currency),
+                'confirm' => true,
+                'off_session' => true,
+                'metadata' => $metadata,
+            ];
+
+            // Use specific payment method if provided
+            if ($paymentMethodId) {
+                $paymentIntentParams['payment_method'] = $paymentMethodId;
+            }
+
+            $paymentIntent = $this->client->createPaymentIntent($paymentIntentParams);
+
+            $success = $paymentIntent->status === 'succeeded';
+
+            Log::info('Stripe recurring charge', [
+                'payment_intent_id' => $paymentIntent->id,
+                'success' => $success,
+                'status' => $paymentIntent->status,
+            ]);
+
+            return [
+                'success' => $success,
+                'reference' => $paymentIntent->id,
+                'transaction_id' => $paymentIntent->id,
+                'data' => [
+                    'payment_intent' => $paymentIntent->id,
+                    'status' => $paymentIntent->status,
+                    'amount' => $paymentIntent->amount,
+                    'currency' => $paymentIntent->currency,
+                    'customer' => $customerId,
+                ],
+            ];
+        } catch (Exception $e) {
+            Log::error('Stripe recurring charge failed', [
+                'error' => $e->getMessage(),
+                'amount' => $amount,
+                'currency' => $currency,
+                'customer' => $authorizationData['customer'] ?? null,
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
 }

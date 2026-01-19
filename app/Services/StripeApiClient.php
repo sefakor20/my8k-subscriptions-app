@@ -153,4 +153,27 @@ class StripeApiClient
     {
         return $this->client();
     }
+
+    /**
+     * Create a PaymentIntent for off-session (recurring) charge.
+     *
+     * @param  array<string, mixed>  $params
+     */
+    public function createPaymentIntent(array $params): PaymentIntent
+    {
+        return $this->client()->paymentIntents->create($params);
+    }
+
+    /**
+     * List payment methods for a customer.
+     *
+     * @return \Stripe\Collection<\Stripe\PaymentMethod>
+     */
+    public function listPaymentMethods(string $customerId, string $type = 'card'): \Stripe\Collection
+    {
+        return $this->client()->paymentMethods->all([
+            'customer' => $customerId,
+            'type' => $type,
+        ]);
+    }
 }
