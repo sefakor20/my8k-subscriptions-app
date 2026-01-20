@@ -8,9 +8,14 @@
             </flux:text>
         </div>
 
-        <flux:button wire:click="createCoupon" variant="primary" icon="plus">
-            Create Coupon
-        </flux:button>
+        <div class="flex items-center gap-3">
+            <flux:button href="{{ route('admin.coupons.analytics') }}" variant="ghost" icon="chart-bar" wire:navigate>
+                View Analytics
+            </flux:button>
+            <flux:button wire:click="createCoupon" variant="primary" icon="plus">
+                Create Coupon
+            </flux:button>
+        </div>
     </div>
 
     {{-- Flash Messages --}}

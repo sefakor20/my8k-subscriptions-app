@@ -8,7 +8,6 @@ use App\Enums\PaymentGateway;
 use App\Enums\PaymentTransactionStatus;
 use App\Jobs\ProvisionNewAccountJob;
 use App\Mail\WelcomeNewCustomer;
-use App\Models\Coupon;
 use App\Models\PaymentTransaction;
 use App\Models\Plan;
 use App\Models\User;

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Livewire\Admin\Analytics;
+use App\Livewire\Admin\CouponAnalytics;
 use App\Livewire\Admin\CouponsList;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\FailedJobsList;
@@ -66,4 +67,5 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function (): void {
 
     // Coupons management routes
     Route::get('/coupons', CouponsList::class)->name('admin.coupons.index');
+    Route::get('/coupons/analytics', CouponAnalytics::class)->name('admin.coupons.analytics');
 });
