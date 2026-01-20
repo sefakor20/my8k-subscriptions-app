@@ -49,6 +49,6 @@ class Notifications extends Component
         return view('livewire.settings.notifications', [
             'categories' => NotificationCategory::configurable(),
             'criticalCategory' => NotificationCategory::Critical,
-        ]);
+        ])->layout('components.layouts.app');
     }
 }

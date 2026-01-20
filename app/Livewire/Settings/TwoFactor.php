@@ -181,4 +181,10 @@ class TwoFactor extends Component
             'buttonText' => __('Continue'),
         ];
     }
+
+    public function render()
+    {
+        return view('livewire.settings.two-factor')
+            ->layout('components.layouts.app');
+    }
 }

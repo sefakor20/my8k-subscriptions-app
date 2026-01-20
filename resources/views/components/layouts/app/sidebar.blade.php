@@ -11,31 +11,31 @@
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('My Account')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Overview') }}
-                    </flux:sidebar.item>
+                @if(!auth()->user()?->isAdmin())
+                    <flux:sidebar.group :heading="__('My Account')" class="grid">
+                        <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+                            {{ __('Overview') }}
+                        </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="shopping-bag" :href="route('orders.index')" :current="request()->routeIs('orders.*')" wire:navigate>
-                        {{ __('Orders') }}
-                    </flux:sidebar.item>
+                        <flux:sidebar.item icon="shopping-bag" :href="route('orders.index')" :current="request()->routeIs('orders.*')" wire:navigate>
+                            {{ __('Orders') }}
+                        </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="document-text" :href="route('invoices.index')" :current="request()->routeIs('invoices.*')" wire:navigate>
-                        {{ __('Invoices') }}
-                    </flux:sidebar.item>
+                        <flux:sidebar.item icon="document-text" :href="route('invoices.index')" :current="request()->routeIs('invoices.*')" wire:navigate>
+                            {{ __('Invoices') }}
+                        </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="credit-card" :href="route('checkout.index')" :current="request()->routeIs('checkout.*')" wire:navigate>
-                        {{ __('Subscribe') }}
-                    </flux:sidebar.item>
+                        <flux:sidebar.item icon="credit-card" :href="route('checkout.index')" :current="request()->routeIs('checkout.*')" wire:navigate>
+                            {{ __('Subscribe') }}
+                        </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="chat-bubble-left-right" :href="route('support.my-tickets')" :current="request()->routeIs('support.*')" wire:navigate>
-                        {{ __('Support Tickets') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+                        <flux:sidebar.item icon="chat-bubble-left-right" :href="route('support.my-tickets')" :current="request()->routeIs('support.*')" wire:navigate>
+                            {{ __('Support Tickets') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
 
                 @if(auth()->user()?->isAdmin())
-                    <flux:separator variant="subtle" />
-
                     <flux:sidebar.group :heading="__('Administration')" class="grid">
                         <flux:sidebar.item icon="squares-2x2" :href="route('admin.dashboard')" :current="request()->routeIs('admin.dashboard')" wire:navigate>
                             {{ __('Dashboard') }}
