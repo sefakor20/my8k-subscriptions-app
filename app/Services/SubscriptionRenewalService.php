@@ -82,6 +82,14 @@ class SubscriptionRenewalService
             $order = $this->createRenewalOrder($subscription, $lastOrder, $chargeResult);
             $this->extendSubscription($subscription);
 
+            // Clear any payment failure tracking after successful renewal
+            if ($subscription->hasPaymentFailure()) {
+                $subscription->clearPaymentFailure();
+                Log::info('Cleared payment failure after successful renewal', [
+                    'subscription_id' => $subscription->id,
+                ]);
+            }
+
             // Generate and send invoice
             try {
                 $this->invoiceService->processOrderInvoice($order);

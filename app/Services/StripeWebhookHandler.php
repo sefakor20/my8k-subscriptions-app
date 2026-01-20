@@ -6,11 +6,17 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentGateway;
+use App\Enums\SubscriptionStatus;
+use App\Mail\PaymentFailureReminder;
 use App\Models\Order;
 use App\Models\Plan;
+use App\Models\Subscription;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
 use RuntimeException;
+use Throwable;
 
 class StripeWebhookHandler
 {
@@ -157,15 +163,69 @@ class StripeWebhookHandler
     public function handleInvoicePaymentFailed(array $data): array
     {
         $customerEmail = $data['customer_email'] ?? null;
+        $customerId = $data['customer'] ?? null;
 
         Log::warning('Stripe invoice.payment_failed', [
             'invoice_id' => $data['id'] ?? null,
             'customer_email' => $customerEmail,
+            'customer_id' => $customerId,
         ]);
+
+        // Find the user by email
+        $user = $customerEmail ? User::where('email', $customerEmail)->first() : null;
+
+        if (! $user) {
+            Log::warning('Stripe payment failed: No user found for email', [
+                'customer_email' => $customerEmail,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Payment failure logged (no user found)',
+            ];
+        }
+
+        // Find active subscription for this user
+        $subscription = Subscription::where('user_id', $user->id)
+            ->where('status', SubscriptionStatus::Active)
+            ->latest()
+            ->first();
+
+        if (! $subscription) {
+            Log::warning('Stripe payment failed: No active subscription found', [
+                'user_id' => $user->id,
+                'customer_email' => $customerEmail,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Payment failure logged (no active subscription)',
+            ];
+        }
+
+        // Record the payment failure
+        $subscription->recordPaymentFailure();
+
+        Log::info('Stripe payment failure recorded', [
+            'subscription_id' => $subscription->id,
+            'user_id' => $user->id,
+            'failure_count' => $subscription->payment_failure_count,
+        ]);
+
+        // Send payment failure reminder email
+        try {
+            Mail::to($user->email)->queue(new PaymentFailureReminder($subscription, 'Stripe'));
+        } catch (Throwable $e) {
+            Log::error('Failed to send Stripe payment failure email', [
+                'subscription_id' => $subscription->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return [
             'success' => true,
-            'message' => 'Payment failure logged',
+            'message' => 'Payment failure processed and notification sent',
+            'subscription_id' => $subscription->id,
         ];
     }
 

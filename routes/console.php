@@ -22,3 +22,17 @@ Schedule::command('subscriptions:renew --limit=50')
     ->withoutOverlapping()
     ->runInBackground()
     ->appendOutputTo(storage_path('logs/subscription-renewals.log'));
+
+// Send suspension warnings daily at 9:00 AM
+Schedule::command('subscriptions:send-suspension-warnings --days=2')
+    ->dailyAt('09:00')
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->appendOutputTo(storage_path('logs/suspension-warnings.log'));
+
+// Suspend subscriptions with expired grace periods daily at 10:00 AM
+Schedule::command('subscriptions:suspend-failed-payments --limit=100')
+    ->dailyAt('10:00')
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->appendOutputTo(storage_path('logs/failed-payment-suspensions.log'));

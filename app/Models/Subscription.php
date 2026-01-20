@@ -36,6 +36,9 @@ class Subscription extends Model
         'credit_balance',
         'scheduled_plan_id',
         'plan_change_scheduled_at',
+        'payment_failed_at',
+        'payment_failure_count',
+        'suspension_warning_sent',
     ];
 
     protected function casts(): array
@@ -57,6 +60,9 @@ class Subscription extends Model
             'auto_renew' => 'boolean',
             'credit_balance' => 'decimal:2',
             'metadata' => 'array',
+            'payment_failed_at' => 'datetime',
+            'payment_failure_count' => 'integer',
+            'suspension_warning_sent' => 'boolean',
         ];
     }
 
@@ -161,5 +167,87 @@ class Subscription extends Model
             'scheduled_plan_id' => null,
             'plan_change_scheduled_at' => null,
         ]);
+    }
+
+    /**
+     * Record a payment failure for this subscription.
+     */
+    public function recordPaymentFailure(): bool
+    {
+        return $this->update([
+            'payment_failed_at' => $this->payment_failed_at ?? now(),
+            'payment_failure_count' => $this->payment_failure_count + 1,
+        ]);
+    }
+
+    /**
+     * Clear payment failure tracking after successful payment.
+     */
+    public function clearPaymentFailure(): bool
+    {
+        return $this->update([
+            'payment_failed_at' => null,
+            'payment_failure_count' => 0,
+            'suspension_warning_sent' => false,
+        ]);
+    }
+
+    /**
+     * Check if subscription has a pending payment failure.
+     */
+    public function hasPaymentFailure(): bool
+    {
+        return $this->payment_failed_at !== null;
+    }
+
+    /**
+     * Check if subscription is in grace period (has failed payment but not yet expired).
+     */
+    public function isInGracePeriod(): bool
+    {
+        return $this->hasPaymentFailure()
+            && $this->status === SubscriptionStatus::Active
+            && $this->expires_at->isFuture();
+    }
+
+    /**
+     * Check if grace period has expired and subscription is ready for suspension.
+     */
+    public function gracePeriodExpired(): bool
+    {
+        return $this->hasPaymentFailure()
+            && $this->status === SubscriptionStatus::Active
+            && $this->expires_at->isPast();
+    }
+
+    /**
+     * Mark that suspension warning has been sent.
+     */
+    public function markSuspensionWarningSent(): bool
+    {
+        return $this->update([
+            'suspension_warning_sent' => true,
+        ]);
+    }
+
+    /**
+     * Scope for subscriptions with payment failures ready for suspension.
+     */
+    public function scopeReadyForSuspension($query)
+    {
+        return $query->where('status', SubscriptionStatus::Active)
+            ->whereNotNull('payment_failed_at')
+            ->where('expires_at', '<=', now());
+    }
+
+    /**
+     * Scope for subscriptions in grace period needing a warning.
+     */
+    public function scopeNeedingSuspensionWarning($query, int $daysBeforeExpiry = 2)
+    {
+        return $query->where('status', SubscriptionStatus::Active)
+            ->whereNotNull('payment_failed_at')
+            ->where('suspension_warning_sent', false)
+            ->whereBetween('expires_at', [now(), now()->addDays($daysBeforeExpiry)]);
     }
 }

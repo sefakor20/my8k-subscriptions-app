@@ -138,6 +138,14 @@ class WooCommerceWebhookController extends Controller
                 ], 400);
             }
 
+            // Clear any payment failure tracking after successful renewal
+            if ($subscription->hasPaymentFailure()) {
+                $subscription->clearPaymentFailure();
+                Log::info('Cleared payment failure after successful WooCommerce renewal', [
+                    'subscription_id' => $subscription->id,
+                ]);
+            }
+
             // Dispatch extension job
             ExtendAccountJob::dispatch(
                 subscriptionId: $subscription->id,
@@ -265,6 +273,9 @@ class WooCommerceWebhookController extends Controller
             // Extract payment method info
             $paymentMethod = $subscriptionData['payment_method_title'] ?? 'Unknown payment method';
 
+            // Record the payment failure on the subscription
+            $subscription->recordPaymentFailure();
+
             // Log payment failure for admin review
             Log::critical('Payment failed for subscription, manual review required', [
                 'subscription_id' => $subscription->id,
@@ -272,6 +283,7 @@ class WooCommerceWebhookController extends Controller
                 'woocommerce_subscription_id' => $woocommerceSubscriptionId,
                 'customer_email' => $subscriptionData['billing']['email'] ?? null,
                 'payment_method' => $paymentMethod,
+                'failure_count' => $subscription->payment_failure_count,
             ]);
 
             // Send payment failure email to customer
@@ -285,7 +297,7 @@ class WooCommerceWebhookController extends Controller
             ]);
 
             // Note: Subscription status update and service suspension are handled by
-            // separate scheduled commands after grace period expires
+            // SuspendFailedPaymentsCommand after grace period expires
 
             return response()->json([
                 'success' => true,
