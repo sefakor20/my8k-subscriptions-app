@@ -36,7 +36,7 @@
                 @if(auth()->user()?->isAdmin())
                     <flux:separator variant="subtle" />
 
-                    <flux:sidebar.group :heading="__('Admin')" class="grid">
+                    <flux:sidebar.group :heading="__('Administration')" class="grid">
                         <flux:sidebar.item icon="squares-2x2" :href="route('admin.dashboard')" :current="request()->routeIs('admin.dashboard')" wire:navigate>
                             {{ __('Dashboard') }}
                         </flux:sidebar.item>
@@ -51,6 +51,10 @@
 
                         <flux:sidebar.item icon="rectangle-stack" :href="route('admin.subscriptions.index')" :current="request()->routeIs('admin.subscriptions.*')" wire:navigate>
                             {{ __('Subscriptions') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="arrows-right-left" :href="route('admin.plan-changes.index')" :current="request()->routeIs('admin.plan-changes.*')" wire:navigate>
+                            {{ __('Plan Changes') }}
                         </flux:sidebar.item>
 
                         <flux:sidebar.item icon="shopping-cart" :href="route('admin.orders.index')" :current="request()->routeIs('admin.orders.*')" wire:navigate>

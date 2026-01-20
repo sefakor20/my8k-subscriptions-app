@@ -32,6 +32,10 @@ class Subscription extends Model
         'next_renewal_at',
         'auto_renew',
         'metadata',
+        'currency',
+        'credit_balance',
+        'scheduled_plan_id',
+        'plan_change_scheduled_at',
     ];
 
     protected function casts(): array
@@ -41,6 +45,7 @@ class Subscription extends Model
             'user_id' => 'string',
             'plan_id' => 'string',
             'service_account_id' => 'string',
+            'scheduled_plan_id' => 'string',
             'status' => SubscriptionStatus::class,
             'starts_at' => 'datetime',
             'expires_at' => 'datetime',
@@ -48,7 +53,9 @@ class Subscription extends Model
             'suspended_at' => 'datetime',
             'last_renewal_at' => 'datetime',
             'next_renewal_at' => 'datetime',
+            'plan_change_scheduled_at' => 'datetime',
             'auto_renew' => 'boolean',
+            'credit_balance' => 'decimal:2',
             'metadata' => 'array',
         ];
     }
@@ -76,6 +83,16 @@ class Subscription extends Model
     public function provisioningLogs(): HasMany
     {
         return $this->hasMany(ProvisioningLog::class);
+    }
+
+    public function planChanges(): HasMany
+    {
+        return $this->hasMany(PlanChange::class);
+    }
+
+    public function scheduledPlan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class, 'scheduled_plan_id');
     }
 
     public function scopeActive($query)
@@ -108,5 +125,41 @@ class Subscription extends Model
     public function daysUntilExpiry(): int
     {
         return (int) now()->diffInDays($this->expires_at, false);
+    }
+
+    public function hasPendingPlanChange(): bool
+    {
+        return $this->scheduled_plan_id !== null;
+    }
+
+    public function hasCredit(): bool
+    {
+        return $this->credit_balance > 0;
+    }
+
+    public function addCredit(float $amount): bool
+    {
+        return $this->update([
+            'credit_balance' => $this->credit_balance + $amount,
+        ]);
+    }
+
+    public function useCredit(float $amount): float
+    {
+        $creditToUse = min($amount, (float) $this->credit_balance);
+
+        $this->update([
+            'credit_balance' => $this->credit_balance - $creditToUse,
+        ]);
+
+        return $creditToUse;
+    }
+
+    public function clearScheduledPlanChange(): bool
+    {
+        return $this->update([
+            'scheduled_plan_id' => null,
+            'plan_change_scheduled_at' => null,
+        ]);
     }
 }

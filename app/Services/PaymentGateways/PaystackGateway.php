@@ -39,7 +39,8 @@ class PaystackGateway implements PaymentGatewayContract
     public function initiatePayment(User $user, Plan $plan, array $metadata = []): array
     {
         $reference = $this->generateReference();
-        $callbackUrl = route('checkout.callback', ['gateway' => 'paystack']);
+        $callbackUrl = $metadata['callback_url'] ?? route('checkout.callback', ['gateway' => 'paystack']);
+        unset($metadata['callback_url']);
 
         // Get gateway-specific currency and price
         $currency = $plan->getCurrencyFor('paystack');

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\PlanChangeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View {
@@ -30,6 +31,12 @@ Route::middleware(['auth'])->prefix('checkout')->name('checkout.')->group(functi
     Route::get('/success', [CheckoutController::class, 'success'])->name('success');
     Route::get('/cancel', [CheckoutController::class, 'cancel'])->name('cancel');
     Route::get('/verify/{reference}', [CheckoutController::class, 'verify'])->name('verify');
+});
+
+// Plan Change Routes
+Route::middleware(['auth', 'verified'])->prefix('plan-change')->name('plan-change.')->group(function (): void {
+    Route::get('/callback/{gateway}', [PlanChangeController::class, 'callback'])->name('callback');
+    Route::delete('/{planChange}/cancel', [PlanChangeController::class, 'cancel'])->name('cancel');
 });
 
 require __DIR__ . '/settings.php';

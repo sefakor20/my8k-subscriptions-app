@@ -6,10 +6,12 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentGateway;
+use App\Enums\PlanChangeStatus;
 use App\Enums\SubscriptionStatus;
 use App\Mail\SubscriptionRenewed;
 use App\Mail\SubscriptionRenewalFailed;
 use App\Models\Order;
+use App\Models\PlanChange;
 use App\Models\Subscription;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +24,7 @@ class SubscriptionRenewalService
     public function __construct(
         private PaymentGatewayManager $gatewayManager,
         private InvoiceService $invoiceService,
+        private PlanChangeService $planChangeService,
     ) {}
 
     /**
@@ -36,6 +39,14 @@ class SubscriptionRenewalService
             'user_id' => $subscription->user_id,
             'plan_id' => $subscription->plan_id,
         ]);
+
+        // Check for scheduled plan change and execute it first
+        $scheduledPlanChange = $this->getScheduledPlanChange($subscription);
+        if ($scheduledPlanChange) {
+            $this->executeScheduledPlanChange($scheduledPlanChange, $subscription);
+            // Refresh subscription to get the new plan
+            $subscription->refresh();
+        }
 
         // Get the last successful order with authorization data
         $lastOrder = $this->getLastSuccessfulOrder($subscription);
@@ -58,7 +69,7 @@ class SubscriptionRenewalService
         }
 
         try {
-            // Charge the payment method
+            // Charge the payment method (with credit applied if available)
             $chargeResult = $this->chargeForRenewal($subscription, $lastOrder, $authData);
 
             if (! $chargeResult['success']) {
@@ -103,6 +114,32 @@ class SubscriptionRenewalService
 
             return ['success' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Get a scheduled plan change for this subscription.
+     */
+    protected function getScheduledPlanChange(Subscription $subscription): ?PlanChange
+    {
+        return $subscription->planChanges()
+            ->where('status', PlanChangeStatus::Scheduled)
+            ->where('scheduled_at', '<=', now())
+            ->first();
+    }
+
+    /**
+     * Execute a scheduled plan change at renewal time.
+     */
+    protected function executeScheduledPlanChange(PlanChange $planChange, Subscription $subscription): void
+    {
+        Log::info('Executing scheduled plan change at renewal', [
+            'plan_change_id' => $planChange->id,
+            'subscription_id' => $subscription->id,
+            'from_plan' => $planChange->from_plan_id,
+            'to_plan' => $planChange->to_plan_id,
+        ]);
+
+        $this->planChangeService->executeScheduledChange($planChange);
     }
 
     /**
@@ -161,7 +198,7 @@ class SubscriptionRenewalService
      * Charge the stored payment method for renewal.
      *
      * @param  array<string, mixed>  $authData
-     * @return array{success: bool, reference?: string, transaction_id?: string, data?: array<string, mixed>, error?: string}
+     * @return array{success: bool, reference?: string, transaction_id?: string, data?: array<string, mixed>, error?: string, credit_used?: float}
      */
     protected function chargeForRenewal(Subscription $subscription, Order $lastOrder, array $authData): array
     {
@@ -179,15 +216,48 @@ class SubscriptionRenewalService
         $currency = $plan->getCurrencyFor($gateway->value);
         $amount = $plan->getAmountFor($gateway->value, $currency);
 
+        // Apply credit balance if available
+        $creditUsed = 0.0;
+        if ($subscription->hasCredit()) {
+            $creditUsed = $subscription->useCredit($amount);
+            $amount = max(0, $amount - $creditUsed);
+
+            Log::info('Applied credit to renewal', [
+                'subscription_id' => $subscription->id,
+                'credit_used' => $creditUsed,
+                'amount_after_credit' => $amount,
+            ]);
+        }
+
+        // If credit covers the full amount, no payment needed
+        if ($amount <= 0) {
+            Log::info('Renewal fully covered by credit', [
+                'subscription_id' => $subscription->id,
+                'credit_used' => $creditUsed,
+            ]);
+
+            return [
+                'success' => true,
+                'reference' => 'credit_' . Str::uuid(),
+                'transaction_id' => null,
+                'data' => ['payment_method' => 'credit_balance', 'credit_used' => $creditUsed],
+                'credit_used' => $creditUsed,
+            ];
+        }
+
         $metadata = [
             'subscription_id' => $subscription->id,
             'user_id' => $subscription->user_id,
             'plan_id' => $plan->id,
             'plan_name' => $plan->name,
             'renewal' => true,
+            'credit_applied' => $creditUsed,
         ];
 
-        return $gatewayInstance->chargeRecurring($authData, $amount, $currency, $metadata);
+        $result = $gatewayInstance->chargeRecurring($authData, $amount, $currency, $metadata);
+        $result['credit_used'] = $creditUsed;
+
+        return $result;
     }
 
     /**
@@ -199,23 +269,30 @@ class SubscriptionRenewalService
     {
         $plan = $subscription->plan;
         $currency = $plan->getCurrencyFor($lastOrder->payment_gateway->value);
-        $amount = $plan->getAmountFor($lastOrder->payment_gateway->value, $currency);
+        $fullAmount = $plan->getAmountFor($lastOrder->payment_gateway->value, $currency);
+        $creditUsed = $chargeResult['credit_used'] ?? 0.0;
+        $amountCharged = max(0, $fullAmount - $creditUsed);
 
-        return DB::transaction(function () use ($subscription, $lastOrder, $chargeResult, $currency, $amount) {
+        return DB::transaction(function () use ($subscription, $lastOrder, $chargeResult, $currency, $fullAmount, $creditUsed, $amountCharged) {
             return Order::create([
                 'subscription_id' => $subscription->id,
                 'user_id' => $subscription->user_id,
                 'status' => OrderStatus::PendingProvisioning,
-                'amount' => $amount,
+                'amount' => $amountCharged,
                 'currency' => $currency,
-                'payment_method' => 'recurring',
+                'payment_method' => $creditUsed >= $fullAmount ? 'credit_balance' : 'recurring',
                 'payment_gateway' => $lastOrder->payment_gateway,
                 'gateway_transaction_id' => $chargeResult['transaction_id'] ?? null,
                 'gateway_session_id' => $chargeResult['reference'] ?? null,
                 'gateway_metadata' => array_merge(
                     $lastOrder->gateway_metadata ?? [],
                     $chargeResult['data'] ?? [],
-                    ['renewal' => true, 'previous_order_id' => $lastOrder->id],
+                    [
+                        'renewal' => true,
+                        'previous_order_id' => $lastOrder->id,
+                        'credit_used' => $creditUsed,
+                        'original_amount' => $fullAmount,
+                    ],
                 ),
                 'paid_at' => now(),
                 'idempotency_key' => 'renewal_' . $subscription->id . '_' . Str::uuid(),

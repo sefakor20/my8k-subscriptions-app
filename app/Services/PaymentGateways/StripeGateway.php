@@ -38,8 +38,10 @@ class StripeGateway implements PaymentGatewayContract
 
     public function initiatePayment(User $user, Plan $plan, array $metadata = []): array
     {
-        $successUrl = route('checkout.callback', ['gateway' => 'stripe']) . '?session_id={CHECKOUT_SESSION_ID}';
+        $baseSuccessUrl = $metadata['callback_url'] ?? route('checkout.callback', ['gateway' => 'stripe']);
+        $successUrl = $baseSuccessUrl . '?session_id={CHECKOUT_SESSION_ID}';
         $cancelUrl = route('checkout.cancel');
+        unset($metadata['callback_url']);
 
         // Get gateway-specific currency and price
         $currency = mb_strtolower($plan->getCurrencyFor('stripe'));

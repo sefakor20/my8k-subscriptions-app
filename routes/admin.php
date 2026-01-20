@@ -7,6 +7,7 @@ use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\FailedJobsList;
 use App\Livewire\Admin\InvoicesList;
 use App\Livewire\Admin\OrdersList;
+use App\Livewire\Admin\PlanChangesList;
 use App\Livewire\Admin\PlansList;
 use App\Livewire\Admin\ProvisioningLogsList;
 use App\Livewire\Admin\ResellerCreditsManagement;
@@ -36,6 +37,9 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function (): void {
 
     // Subscriptions management routes
     Route::get('/subscriptions', SubscriptionsList::class)->name('admin.subscriptions.index');
+
+    // Plan changes management routes
+    Route::get('/plan-changes', PlanChangesList::class)->name('admin.plan-changes.index');
 
     // Orders management routes
     Route::get('/orders', OrdersList::class)->name('admin.orders.index');
