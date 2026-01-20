@@ -17,6 +17,7 @@ Route::view('dashboard', 'dashboard')
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/orders', \App\Livewire\Dashboard\MyOrders::class)->name('orders.index');
     Route::get('/invoices', \App\Livewire\Dashboard\MyInvoices::class)->name('invoices.index');
+    Route::get('/notifications/history', \App\Livewire\Customer\NotificationHistory::class)->name('notifications.history');
 
     // Support Tickets
     Route::get('/support/my-tickets', \App\Livewire\Customer\MyTickets::class)->name('support.my-tickets');

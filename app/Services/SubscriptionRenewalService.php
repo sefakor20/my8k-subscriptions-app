@@ -15,7 +15,6 @@ use App\Models\PlanChange;
 use App\Models\Subscription;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -25,6 +24,7 @@ class SubscriptionRenewalService
         private PaymentGatewayManager $gatewayManager,
         private InvoiceService $invoiceService,
         private PlanChangeService $planChangeService,
+        private NotificationService $notificationService,
     ) {}
 
     /**
@@ -367,14 +367,11 @@ class SubscriptionRenewalService
      */
     protected function sendRenewalSuccessNotification(Subscription $subscription, Order $order): void
     {
-        try {
-            Mail::to($subscription->user->email)->send(new SubscriptionRenewed($subscription, $order));
-        } catch (Throwable $e) {
-            Log::error('Failed to send renewal success email', [
-                'subscription_id' => $subscription->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $this->notificationService->queueMail(
+            $subscription->user,
+            new SubscriptionRenewed($subscription, $order),
+            ['subscription_id' => $subscription->id, 'order_id' => $order->id],
+        );
     }
 
     /**
@@ -382,13 +379,10 @@ class SubscriptionRenewalService
      */
     protected function sendRenewalFailureNotification(Subscription $subscription, string $reason): void
     {
-        try {
-            Mail::to($subscription->user->email)->send(new SubscriptionRenewalFailed($subscription, $reason));
-        } catch (Throwable $e) {
-            Log::error('Failed to send renewal failure email', [
-                'subscription_id' => $subscription->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $this->notificationService->queueMail(
+            $subscription->user,
+            new SubscriptionRenewalFailed($subscription, $reason),
+            ['subscription_id' => $subscription->id, 'reason' => $reason],
+        );
     }
 }

@@ -6,6 +6,7 @@ use App\Livewire\Admin\Analytics;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\FailedJobsList;
 use App\Livewire\Admin\InvoicesList;
+use App\Livewire\Admin\NotificationLogsList;
 use App\Livewire\Admin\OrdersList;
 use App\Livewire\Admin\PlanChangesList;
 use App\Livewire\Admin\PlansList;
@@ -58,4 +59,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function (): void {
 
     // Support tickets routes
     Route::get('/support/tickets', SupportTicketsList::class)->name('admin.support.tickets');
+
+    // Notification logs routes
+    Route::get('/notification-logs', NotificationLogsList::class)->name('admin.notification-logs.index');
 });

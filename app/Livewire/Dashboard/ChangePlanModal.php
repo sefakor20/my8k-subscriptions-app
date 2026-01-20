@@ -8,10 +8,10 @@ use App\Enums\PaymentGateway;
 use App\Mail\PlanChangeScheduled;
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Services\NotificationService;
 use App\Services\PaymentGatewayManager;
 use App\Services\PlanChangeService;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -179,8 +179,12 @@ class ChangePlanModal extends Component
                 );
 
                 // Send scheduled email
-                Mail::to($this->subscription->user->email)
-                    ->queue(new PlanChangeScheduled($planChange));
+                $notificationService = app(NotificationService::class);
+                $notificationService->queueMail(
+                    $this->subscription->user,
+                    new PlanChangeScheduled($planChange),
+                    ['plan_change_id' => $planChange->id],
+                );
 
                 session()->flash('success', 'Plan change scheduled for your next renewal.');
                 $this->closeModal();

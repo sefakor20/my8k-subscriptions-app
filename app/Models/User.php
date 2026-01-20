@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\NotificationCategory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -118,5 +119,38 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->is_admin;
+    }
+
+    /**
+     * Get all notification preferences for this user
+     */
+    public function notificationPreferences(): HasMany
+    {
+        return $this->hasMany(NotificationPreference::class);
+    }
+
+    /**
+     * Get all notification logs for this user
+     */
+    public function notificationLogs(): HasMany
+    {
+        return $this->hasMany(NotificationLog::class);
+    }
+
+    /**
+     * Check if the user has a specific notification category enabled
+     */
+    public function hasNotificationEnabled(NotificationCategory $category, string $channel = 'mail'): bool
+    {
+        if ($category === NotificationCategory::Critical) {
+            return true;
+        }
+
+        $preference = $this->notificationPreferences()
+            ->where('category', $category)
+            ->where('channel', $channel)
+            ->first();
+
+        return $preference?->is_enabled ?? true;
     }
 }

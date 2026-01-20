@@ -10,13 +10,14 @@ use App\Models\Invoice;
 use App\Models\Order;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
-use Throwable;
 
 class InvoiceService
 {
+    public function __construct(
+        private NotificationService $notificationService,
+    ) {}
     /**
      * Process a complete invoice workflow for an order.
      * Creates invoice, generates PDF, and sends email.
@@ -183,20 +184,11 @@ class InvoiceService
      */
     public function sendInvoiceEmail(Invoice $invoice): void
     {
-        try {
-            Mail::to($invoice->user->email)
-                ->send(new InvoiceGenerated($invoice));
-
-            Log::info('Invoice email sent', [
-                'invoice_id' => $invoice->id,
-                'email' => $invoice->user->email,
-            ]);
-        } catch (Throwable $e) {
-            Log::error('Failed to send invoice email', [
-                'invoice_id' => $invoice->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $this->notificationService->queueMail(
+            $invoice->user,
+            new InvoiceGenerated($invoice),
+            ['invoice_id' => $invoice->id],
+        );
     }
 
     /**

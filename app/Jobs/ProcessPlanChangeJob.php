@@ -6,13 +6,13 @@ namespace App\Jobs;
 
 use App\Mail\PlanChangeConfirmed;
 use App\Models\PlanChange;
+use App\Services\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 class ProcessPlanChangeJob implements ShouldQueue
@@ -72,20 +72,12 @@ class ProcessPlanChangeJob implements ShouldQueue
      */
     private function sendConfirmationEmail(PlanChange $planChange): void
     {
-        try {
-            Mail::to($planChange->user->email)
-                ->queue(new PlanChangeConfirmed($planChange));
-
-            Log::info('Plan change confirmation email queued', [
-                'plan_change_id' => $planChange->id,
-                'email' => $planChange->user->email,
-            ]);
-        } catch (Throwable $e) {
-            Log::error('Failed to send plan change confirmation email', [
-                'plan_change_id' => $planChange->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $notificationService = app(NotificationService::class);
+        $notificationService->queueMail(
+            $planChange->user,
+            new PlanChangeConfirmed($planChange),
+            ['plan_change_id' => $planChange->id],
+        );
     }
 
     /**
