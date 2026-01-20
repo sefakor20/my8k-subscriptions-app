@@ -120,7 +120,11 @@ class CheckoutController extends Controller
             $currency = $couponData ? $couponData['currency'] : $plan->getCurrencyFor($gatewayId);
 
             // Initiate payment with potentially discounted amount
-            $result = $gateway->initiatePayment($user, $plan, $chargeAmount, $couponData);
+            $metadata = [
+                'override_amount' => $chargeAmount,
+                'coupon_data' => $couponData,
+            ];
+            $result = $gateway->initiatePayment($user, $plan, $metadata);
 
             // Create pending transaction record
             PaymentTransaction::create([

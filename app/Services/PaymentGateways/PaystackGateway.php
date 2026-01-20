@@ -42,9 +42,10 @@ class PaystackGateway implements PaymentGatewayContract
         $callbackUrl = $metadata['callback_url'] ?? route('checkout.callback', ['gateway' => 'paystack']);
         unset($metadata['callback_url']);
 
-        // Get gateway-specific currency and price
+        // Get gateway-specific currency and price (or use override for discounted amounts)
         $currency = $plan->getCurrencyFor('paystack');
-        $price = $plan->getAmountFor('paystack', $currency);
+        $price = $metadata['override_amount'] ?? $plan->getAmountFor('paystack', $currency);
+        unset($metadata['override_amount'], $metadata['coupon_data']);
 
         // Convert amount to kobo (Paystack expects amount in smallest unit)
         $amountInKobo = (int) ($price * 100);

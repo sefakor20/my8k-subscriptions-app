@@ -43,9 +43,10 @@ class StripeGateway implements PaymentGatewayContract
         $cancelUrl = route('checkout.cancel');
         unset($metadata['callback_url']);
 
-        // Get gateway-specific currency and price
+        // Get gateway-specific currency and price (or use override for discounted amounts)
         $currency = mb_strtolower($plan->getCurrencyFor('stripe'));
-        $price = $plan->getAmountFor('stripe', mb_strtoupper($currency));
+        $price = $metadata['override_amount'] ?? $plan->getAmountFor('stripe', mb_strtoupper($currency));
+        unset($metadata['override_amount'], $metadata['coupon_data']);
 
         // Convert amount to cents (Stripe expects amount in smallest unit)
         $amountInCents = (int) ($price * 100);

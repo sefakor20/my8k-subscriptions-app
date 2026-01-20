@@ -47,7 +47,8 @@
                 </flux:text>
             </div>
         @else
-            <form action="{{ route('checkout.initiate') }}" method="POST" x-data="{ selectedGateway: '{{ $gateways[0]->getIdentifier()->value }}' }">
+            @php $firstGateway = reset($gateways); @endphp
+            <form action="{{ route('checkout.initiate') }}" method="POST" x-data="{ selectedGateway: '{{ $firstGateway->getIdentifier()->value }}' }">
                 @csrf
                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
 
@@ -100,7 +101,7 @@
 
                 {{-- Coupon Code Input --}}
                 <div class="mt-6">
-                    <livewire:checkout.coupon-input :plan-id="$plan->id" :gateway="$gateways[0]->getIdentifier()->value" />
+                    <livewire:checkout.coupon-input :plan-id="$plan->id" :gateway="$firstGateway->getIdentifier()->value" />
                 </div>
 
                 <div class="mt-8 flex gap-4">
