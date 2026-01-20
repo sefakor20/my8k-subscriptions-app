@@ -25,7 +25,7 @@ class TicketDetailModal extends Component
 
     public ?string $newStatus = null;
 
-    public ?int $assignToUserId = null;
+    public ?string $assignToUserId = null;
 
     public function mount(string $ticketId): void
     {

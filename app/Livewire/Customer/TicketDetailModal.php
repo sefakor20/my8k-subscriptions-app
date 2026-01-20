@@ -30,7 +30,7 @@ class TicketDetailModal extends Component
     public function loadTicket(): void
     {
         $this->ticket = SupportTicket::with([
-            'messages.user',
+            'messages' => fn($query) => $query->public()->with('user'),
             'assignedAdmin',
             'subscription',
             'order',

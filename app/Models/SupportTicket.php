@@ -92,7 +92,7 @@ class SupportTicket extends Model
         return $query->whereNull('assigned_to');
     }
 
-    public function scopeAssignedTo($query, int $userId)
+    public function scopeAssignedTo($query, string $userId)
     {
         return $query->where('assigned_to', $userId);
     }

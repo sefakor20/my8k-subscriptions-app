@@ -82,6 +82,6 @@ class MyTickets extends Component
 
         return view('livewire.customer.my-tickets', [
             'tickets' => $tickets,
-        ]);
+        ])->layout('components.layouts.app');
     }
 }

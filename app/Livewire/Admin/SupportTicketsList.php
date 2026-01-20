@@ -116,6 +116,6 @@ class SupportTicketsList extends Component
 
         return view('livewire.admin.support-tickets-list', [
             'tickets' => $tickets,
-        ]);
+        ])->layout('components.layouts.app');
     }
 }
