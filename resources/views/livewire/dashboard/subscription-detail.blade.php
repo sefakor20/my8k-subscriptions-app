@@ -301,6 +301,11 @@
 
             {{-- Action Buttons --}}
             <div class="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-700">
+                @if ($this->subscription->status === \App\Enums\SubscriptionStatus::Active && $this->subscription->expires_at?->isFuture())
+                    <flux:button wire:click="openChangePlanModal" variant="subtle" icon="arrows-right-left">
+                        Change Plan
+                    </flux:button>
+                @endif
                 <flux:button wire:click="closeModal" variant="primary">
                     Close
                 </flux:button>

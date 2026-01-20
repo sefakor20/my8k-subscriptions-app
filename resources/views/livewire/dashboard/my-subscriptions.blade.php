@@ -165,7 +165,17 @@
                                 </div>
                             </div>
 
-                            <div class="ml-6">
+                            <div class="ml-6 flex items-center gap-2">
+                                @if ($subscription->status === \App\Enums\SubscriptionStatus::Active && $subscription->expires_at?->isFuture())
+                                    <flux:button
+                                        wire:click="changePlan('{{ $subscription->id }}')"
+                                        variant="subtle"
+                                        size="sm"
+                                        icon="arrows-right-left"
+                                    >
+                                        Change Plan
+                                    </flux:button>
+                                @endif
                                 <flux:button
                                     wire:click="showDetail('{{ $subscription->id }}')"
                                     variant="primary"
@@ -189,4 +199,7 @@
 
     {{-- Subscription Detail Modal --}}
     <livewire:dashboard.subscription-detail />
+
+    {{-- Change Plan Modal --}}
+    <livewire:dashboard.change-plan-modal />
 </div>

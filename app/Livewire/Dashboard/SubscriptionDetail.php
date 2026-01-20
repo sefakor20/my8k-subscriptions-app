@@ -113,6 +113,17 @@ class SubscriptionDetail extends Component
     }
 
     /**
+     * Open the change plan modal
+     */
+    public function openChangePlanModal(): void
+    {
+        if ($this->subscriptionId) {
+            $this->closeModal();
+            $this->dispatch('open-change-plan-modal', subscriptionId: $this->subscriptionId);
+        }
+    }
+
+    /**
      * Close the modal
      */
     public function closeModal(): void

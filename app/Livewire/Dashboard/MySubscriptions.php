@@ -8,6 +8,7 @@ use App\Enums\SubscriptionStatus;
 use App\Models\Subscription;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -87,6 +88,25 @@ class MySubscriptions extends Component
     public function showDetail(string $subscriptionId): void
     {
         $this->dispatch('open-subscription-detail', subscriptionId: $subscriptionId);
+    }
+
+    /**
+     * Open the change plan modal for a subscription
+     */
+    public function changePlan(string $subscriptionId): void
+    {
+        $this->dispatch('open-change-plan-modal', subscriptionId: $subscriptionId);
+    }
+
+    /**
+     * Refresh the subscription list after a plan change
+     */
+    #[On('plan-changed')]
+    #[On('plan-change-scheduled')]
+    public function refreshSubscriptions(): void
+    {
+        unset($this->subscriptions);
+        unset($this->statistics);
     }
 
     /**
