@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\InvoiceService;
 use App\Services\PaymentGatewayManager;
 use App\Services\PaymentGateways\PaystackGateway;
+use App\Services\PlanChangeService;
 use App\Services\SubscriptionRenewalService;
 use Illuminate\Support\Facades\Mail;
 
@@ -244,7 +245,8 @@ it('successfully renews subscription with paystack authorization', function () {
         ->andReturn($mockGateway);
 
     $invoiceService = app(InvoiceService::class);
-    $service = new SubscriptionRenewalService($mockManager, $invoiceService);
+    $planChangeService = app(PlanChangeService::class);
+    $service = new SubscriptionRenewalService($mockManager, $invoiceService, $planChangeService);
     $originalExpiry = $subscription->expires_at->copy();
 
     $result = $service->renewSubscription($subscription);
