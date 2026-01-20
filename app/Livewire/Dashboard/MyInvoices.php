@@ -9,7 +9,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MyInvoices extends Component
 {
@@ -32,12 +32,16 @@ class MyInvoices extends Component
     /**
      * Download an invoice PDF
      */
-    public function download(string $invoiceId): Response
+    public function download(string $invoiceId): StreamedResponse
     {
         $invoice = auth()->user()->invoices()->findOrFail($invoiceId);
         $invoiceService = app(InvoiceService::class);
 
-        return $invoiceService->downloadPdf($invoice);
+        return response()->streamDownload(function () use ($invoiceService, $invoice) {
+            echo $invoiceService->getPdfContent($invoice);
+        }, $invoice->getPdfFilename(), [
+            'Content-Type' => 'application/pdf',
+        ]);
     }
 
     /**

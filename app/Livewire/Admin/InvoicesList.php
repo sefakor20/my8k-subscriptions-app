@@ -12,7 +12,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoicesList extends Component
 {
@@ -94,12 +94,16 @@ class InvoicesList extends Component
     /**
      * Download an invoice PDF
      */
-    public function download(string $invoiceId): Response
+    public function download(string $invoiceId): StreamedResponse
     {
         $invoice = Invoice::findOrFail($invoiceId);
         $invoiceService = app(InvoiceService::class);
 
-        return $invoiceService->downloadPdf($invoice);
+        return response()->streamDownload(function () use ($invoiceService, $invoice) {
+            echo $invoiceService->getPdfContent($invoice);
+        }, $invoice->getPdfFilename(), [
+            'Content-Type' => 'application/pdf',
+        ]);
     }
 
     /**
