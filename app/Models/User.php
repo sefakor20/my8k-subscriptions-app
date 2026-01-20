@@ -153,4 +153,20 @@ class User extends Authenticatable
 
         return $preference?->is_enabled ?? true;
     }
+
+    /**
+     * Get all coupon redemptions for this user
+     */
+    public function couponRedemptions(): HasMany
+    {
+        return $this->hasMany(CouponRedemption::class);
+    }
+
+    /**
+     * Check if this is a first-time customer (no previous orders)
+     */
+    public function isFirstTimeCustomer(): bool
+    {
+        return $this->orders()->count() === 0;
+    }
 }

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Livewire\Admin\Analytics;
+use App\Livewire\Admin\CouponsList;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\FailedJobsList;
 use App\Livewire\Admin\InvoicesList;
@@ -62,4 +63,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function (): void {
 
     // Notification logs routes
     Route::get('/notification-logs', NotificationLogsList::class)->name('admin.notification-logs.index');
+
+    // Coupons management routes
+    Route::get('/coupons', CouponsList::class)->name('admin.coupons.index');
 });

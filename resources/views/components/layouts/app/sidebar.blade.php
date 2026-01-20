@@ -77,6 +77,10 @@
                             {{ __('Plans') }}
                         </flux:sidebar.item>
 
+                        <flux:sidebar.item icon="ticket" :href="route('admin.coupons.index')" :current="request()->routeIs('admin.coupons.*')" wire:navigate>
+                            {{ __('Coupons') }}
+                        </flux:sidebar.item>
+
                         <flux:sidebar.item icon="chat-bubble-left-right" :href="route('admin.support.tickets')" :current="request()->routeIs('admin.support.*')" wire:navigate>
                             {{ __('Support Tickets') }}
                         </flux:sidebar.item>

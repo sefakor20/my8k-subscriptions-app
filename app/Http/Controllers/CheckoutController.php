@@ -8,9 +8,11 @@ use App\Enums\PaymentGateway;
 use App\Enums\PaymentTransactionStatus;
 use App\Jobs\ProvisionNewAccountJob;
 use App\Mail\WelcomeNewCustomer;
+use App\Models\Coupon;
 use App\Models\PaymentTransaction;
 use App\Models\Plan;
 use App\Models\User;
+use App\Services\CouponService;
 use App\Services\InvoiceService;
 use App\Services\PaymentGatewayManager;
 use App\Services\SubscriptionOrderService;
@@ -28,6 +30,7 @@ class CheckoutController extends Controller
         private PaymentGatewayManager $gatewayManager,
         private SubscriptionOrderService $subscriptionService,
         private InvoiceService $invoiceService,
+        private CouponService $couponService,
     ) {}
 
     /**
@@ -69,6 +72,7 @@ class CheckoutController extends Controller
         $request->validate([
             'plan_id' => 'required|exists:plans,id',
             'gateway' => 'required|string|in:paystack,stripe',
+            'coupon_code' => 'nullable|string|max:50',
         ]);
 
         $plan = Plan::findOrFail($request->plan_id);
@@ -79,6 +83,31 @@ class CheckoutController extends Controller
             return back()->with('error', 'Selected plan is not available');
         }
 
+        // Validate coupon if provided
+        $couponData = null;
+        if ($request->filled('coupon_code')) {
+            $couponResult = $this->couponService->validateCoupon(
+                $request->coupon_code,
+                $user,
+                $plan,
+                $gatewayId,
+            );
+
+            if (! $couponResult['valid']) {
+                return back()->with('error', $couponResult['error']);
+            }
+
+            $couponData = [
+                'coupon_id' => $couponResult['coupon']->id,
+                'code' => $couponResult['coupon']->code,
+                'discount' => $couponResult['discount'],
+                'original_amount' => $couponResult['original_amount'],
+                'final_amount' => $couponResult['final_amount'],
+                'currency' => $couponResult['currency'],
+                'trial_days' => $couponResult['trial_days'],
+            ];
+        }
+
         try {
             $gateway = $this->gatewayManager->gateway($gatewayId);
 
@@ -86,8 +115,12 @@ class CheckoutController extends Controller
                 return back()->with('error', 'Selected payment method is not available');
             }
 
-            // Initiate payment
-            $result = $gateway->initiatePayment($user, $plan);
+            // Determine the amount to charge (discounted if coupon applied)
+            $chargeAmount = $couponData ? $couponData['final_amount'] : $plan->getAmountFor($gatewayId, $plan->getCurrencyFor($gatewayId));
+            $currency = $couponData ? $couponData['currency'] : $plan->getCurrencyFor($gatewayId);
+
+            // Initiate payment with potentially discounted amount
+            $result = $gateway->initiatePayment($user, $plan, $chargeAmount, $couponData);
 
             // Create pending transaction record
             PaymentTransaction::create([
@@ -95,15 +128,23 @@ class CheckoutController extends Controller
                 'payment_gateway' => PaymentGateway::from($gatewayId),
                 'reference' => $result['reference'],
                 'status' => PaymentTransactionStatus::Pending,
-                'amount' => $plan->price,
-                'currency' => $plan->currency ?? 'USD',
+                'amount' => $chargeAmount,
+                'currency' => $currency,
             ]);
+
+            // Store coupon data in session for callback processing
+            if ($couponData) {
+                $request->session()->put("checkout.coupon.{$result['reference']}", $couponData);
+            }
 
             Log::info('Checkout initiated', [
                 'user_id' => $user->id,
                 'plan_id' => $plan->id,
                 'gateway' => $gatewayId,
                 'reference' => $result['reference'],
+                'coupon_code' => $couponData['code'] ?? null,
+                'original_amount' => $couponData['original_amount'] ?? null,
+                'final_amount' => $chargeAmount,
             ]);
 
             // Redirect to gateway checkout
@@ -148,11 +189,15 @@ class CheckoutController extends Controller
             $result = $gatewayInstance->verifyPayment($reference);
 
             if ($result['success']) {
+                // Retrieve coupon data from session
+                $couponData = $request->session()->pull("checkout.coupon.{$reference}");
+
                 // Create subscription and order (idempotent)
                 $creationResult = $this->createSubscriptionFromCallback(
                     $gatewayEnum,
                     $reference,
                     $result['data'] ?? [],
+                    $couponData,
                 );
 
                 return view('checkout.success', [
@@ -227,12 +272,14 @@ class CheckoutController extends Controller
      * Create subscription from callback verification data.
      *
      * @param  array<string, mixed>  $verificationData
+     * @param  array<string, mixed>|null  $couponData
      * @return array<string, mixed>
      */
     private function createSubscriptionFromCallback(
         PaymentGateway $gateway,
         string $reference,
         array $verificationData,
+        ?array $couponData = null,
     ): array {
         // Extract email and plan from verification data or pending transaction
         $transaction = PaymentTransaction::where('reference', $reference)->first();
@@ -263,6 +310,7 @@ class CheckoutController extends Controller
             $email,
             $plan,
             $paymentData,
+            $couponData,
         );
 
         // Dispatch provisioning job if newly created (not duplicate)

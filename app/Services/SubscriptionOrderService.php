@@ -8,6 +8,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentGateway;
 use App\Enums\PaymentTransactionStatus;
 use App\Enums\SubscriptionStatus;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\PaymentTransaction;
 use App\Models\Plan;
@@ -20,10 +21,15 @@ use Illuminate\Support\Str;
 
 class SubscriptionOrderService
 {
+    public function __construct(
+        private CouponService $couponService,
+    ) {}
+
     /**
      * Create or retrieve subscription and order using idempotency.
      *
      * @param  array<string, mixed>  $paymentData
+     * @param  array<string, mixed>|null  $couponData
      * @return array{success: bool, duplicate: bool, subscription?: Subscription, order?: Order, user?: User, user_was_created?: bool, message: string}
      */
     public function createSubscriptionAndOrder(
@@ -32,6 +38,7 @@ class SubscriptionOrderService
         string $email,
         Plan $plan,
         array $paymentData,
+        ?array $couponData = null,
     ): array {
         $idempotencyKey = $this->generateIdempotencyKey($gateway, $reference);
 
@@ -55,7 +62,7 @@ class SubscriptionOrderService
             ];
         }
 
-        return DB::transaction(function () use ($gateway, $reference, $email, $plan, $paymentData, $idempotencyKey): array {
+        return DB::transaction(function () use ($gateway, $reference, $email, $plan, $paymentData, $idempotencyKey, $couponData): array {
             // Double-check inside transaction (race condition protection)
             $existingOrder = $this->checkIdempotency($idempotencyKey);
 
@@ -74,10 +81,11 @@ class SubscriptionOrderService
             $userData = $this->findOrCreateUser($email, $paymentData['customer'] ?? []);
             $user = $userData['user'];
 
-            // Create subscription
-            $subscription = $this->createSubscription($user, $plan, $gateway);
+            // Create subscription (with trial extension if coupon provides it)
+            $trialDays = $couponData['trial_days'] ?? null;
+            $subscription = $this->createSubscription($user, $plan, $gateway, $trialDays);
 
-            // Create order
+            // Create order (with coupon data)
             $order = $this->createOrder(
                 $user,
                 $subscription,
@@ -86,7 +94,23 @@ class SubscriptionOrderService
                 $reference,
                 $idempotencyKey,
                 $paymentData,
+                $couponData,
             );
+
+            // Redeem coupon if provided
+            if ($couponData !== null) {
+                $coupon = Coupon::find($couponData['coupon_id']);
+                if ($coupon) {
+                    $this->couponService->redeemCoupon(
+                        $coupon,
+                        $user,
+                        $order,
+                        (float) $couponData['original_amount'],
+                        (float) $couponData['discount'],
+                        $couponData['currency'],
+                    );
+                }
+            }
 
             // Update payment transaction
             $this->updatePaymentTransaction($reference, $order, $gateway, $paymentData);
@@ -97,6 +121,7 @@ class SubscriptionOrderService
                 'user_id' => $user->id,
                 'subscription_id' => $subscription->id,
                 'order_id' => $order->id,
+                'coupon_code' => $couponData['code'] ?? null,
             ]);
 
             return [
@@ -157,10 +182,16 @@ class SubscriptionOrderService
     /**
      * Create subscription record.
      */
-    public function createSubscription(User $user, Plan $plan, PaymentGateway $gateway): Subscription
+    public function createSubscription(User $user, Plan $plan, PaymentGateway $gateway, ?int $trialExtensionDays = null): Subscription
     {
         $startsAt = now();
-        $expiresAt = now()->addDays($plan->duration_days);
+        $durationDays = $plan->duration_days + ($trialExtensionDays ?? 0);
+        $expiresAt = now()->addDays($durationDays);
+
+        $metadata = ['source' => $gateway->value];
+        if ($trialExtensionDays !== null && $trialExtensionDays > 0) {
+            $metadata['trial_extension_days'] = $trialExtensionDays;
+        }
 
         return Subscription::create([
             'user_id' => $user->id,
@@ -171,7 +202,7 @@ class SubscriptionOrderService
             'last_renewal_at' => $startsAt,
             'next_renewal_at' => $expiresAt,
             'auto_renew' => false,
-            'metadata' => ['source' => $gateway->value],
+            'metadata' => $metadata,
         ]);
     }
 
@@ -179,6 +210,7 @@ class SubscriptionOrderService
      * Create order record.
      *
      * @param  array<string, mixed>  $paymentData
+     * @param  array<string, mixed>|null  $couponData
      */
     public function createOrder(
         User $user,
@@ -188,18 +220,27 @@ class SubscriptionOrderService
         string $reference,
         string $idempotencyKey,
         array $paymentData,
+        ?array $couponData = null,
     ): Order {
         $amount = $this->extractAmount($gateway, $paymentData, $plan);
         $currency = $this->extractCurrency($gateway, $paymentData, $plan);
         $transactionId = $this->extractTransactionId($gateway, $reference, $paymentData);
+
+        // Use coupon data for amounts if provided
+        $originalAmount = $couponData['original_amount'] ?? $amount;
+        $discountAmount = $couponData['discount'] ?? 0.0;
+        $finalAmount = $couponData['final_amount'] ?? $amount;
 
         return Order::create([
             'subscription_id' => $subscription->id,
             'user_id' => $user->id,
             'woocommerce_order_id' => null,
             'status' => OrderStatus::PendingProvisioning,
-            'amount' => $amount,
-            'currency' => $currency,
+            'amount' => $finalAmount,
+            'original_amount' => $originalAmount,
+            'discount_amount' => $discountAmount,
+            'currency' => $couponData['currency'] ?? $currency,
+            'coupon_id' => $couponData['coupon_id'] ?? null,
             'payment_method' => $gateway->value,
             'payment_gateway' => $gateway,
             'gateway_transaction_id' => $transactionId,

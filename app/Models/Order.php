@@ -30,6 +30,9 @@ class Order extends Model
         'gateway_transaction_id',
         'gateway_session_id',
         'gateway_metadata',
+        'coupon_id',
+        'discount_amount',
+        'original_amount',
         'paid_at',
         'provisioned_at',
         'idempotency_key',
@@ -42,9 +45,12 @@ class Order extends Model
             'id' => 'string',
             'subscription_id' => 'string',
             'user_id' => 'string',
+            'coupon_id' => 'string',
             'status' => OrderStatus::class,
             'payment_gateway' => PaymentGateway::class,
             'amount' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
+            'original_amount' => 'decimal:2',
             'paid_at' => 'datetime',
             'provisioned_at' => 'datetime',
             'webhook_payload' => 'array',
@@ -70,6 +76,11 @@ class Order extends Model
     public function invoice(): HasOne
     {
         return $this->hasOne(Invoice::class);
+    }
+
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
     }
 
     public function scopePendingProvisioning($query)

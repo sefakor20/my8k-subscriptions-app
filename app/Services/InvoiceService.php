@@ -56,20 +56,38 @@ class InvoiceService
         $subscription = $order->subscription;
         $plan = $subscription?->plan;
 
-        $subtotal = (float) $order->amount;
+        // Use original amount for subtotal if available (before discount)
+        $originalAmount = (float) ($order->original_amount ?? $order->amount);
+        $discountAmount = (float) ($order->discount_amount ?? 0);
+        $finalAmount = (float) $order->amount;
+
+        // Subtotal is the original amount before discount
+        $subtotal = $originalAmount;
         $taxRate = config('invoice.defaults.tax_rate', 0);
-        $taxAmount = $subtotal * ($taxRate / 100);
-        $total = $subtotal + $taxAmount;
+        $taxAmount = $finalAmount * ($taxRate / 100);
+        $total = $finalAmount + $taxAmount;
 
         $lineItems = [
             [
                 'description' => $plan?->name ?? 'IPTV Subscription',
                 'details' => $plan?->description ?? '',
                 'quantity' => 1,
-                'unit_price' => $subtotal,
-                'amount' => $subtotal,
+                'unit_price' => $originalAmount,
+                'amount' => $originalAmount,
             ],
         ];
+
+        // Add discount line item if coupon was applied
+        if ($discountAmount > 0 && $order->coupon_id !== null) {
+            $couponCode = $order->coupon?->code ?? 'DISCOUNT';
+            $lineItems[] = [
+                'description' => "Discount ({$couponCode})",
+                'details' => $order->coupon?->name ?? 'Promotional discount',
+                'quantity' => 1,
+                'unit_price' => -$discountAmount,
+                'amount' => -$discountAmount,
+            ];
+        }
 
         $customerDetails = [
             'name' => $user->name,
@@ -107,6 +125,8 @@ class InvoiceService
             'invoice_id' => $invoice->id,
             'invoice_number' => $invoice->invoice_number,
             'order_id' => $order->id,
+            'coupon_id' => $order->coupon_id,
+            'discount_amount' => $discountAmount,
         ]);
 
         return $invoice;

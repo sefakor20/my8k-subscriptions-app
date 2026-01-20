@@ -47,7 +47,7 @@
                 </flux:text>
             </div>
         @else
-            <form action="{{ route('checkout.initiate') }}" method="POST">
+            <form action="{{ route('checkout.initiate') }}" method="POST" x-data="{ selectedGateway: '{{ $gateways[0]->getIdentifier()->value }}' }">
                 @csrf
                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
 
@@ -59,6 +59,7 @@
                                 name="gateway"
                                 value="{{ $gateway->getIdentifier()->value }}"
                                 class="peer sr-only"
+                                x-model="selectedGateway"
                                 {{ $loop->first ? 'checked' : '' }}
                             >
                             <div class="bg-white dark:bg-zinc-900 rounded-lg border-2 border-zinc-200 dark:border-zinc-700 p-4 peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 transition-all">
@@ -95,6 +96,11 @@
                             </div>
                         </label>
                     @endforeach
+                </div>
+
+                {{-- Coupon Code Input --}}
+                <div class="mt-6">
+                    <livewire:checkout.coupon-input :plan-id="$plan->id" :gateway="$gateways[0]->getIdentifier()->value" />
                 </div>
 
                 <div class="mt-8 flex gap-4">
