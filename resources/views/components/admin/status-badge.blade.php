@@ -6,37 +6,37 @@
     use App\Enums\ServiceAccountStatus;
     use App\Enums\ProvisioningAction;
 
-    // Determine the color variant based on the status
-    $variant = match(true) {
+    // Determine the color based on the status
+    $color = match(true) {
         // Subscription Statuses
-        $status === SubscriptionStatus::Active => 'success',
-        $status === SubscriptionStatus::Pending => 'warning',
-        $status === SubscriptionStatus::Expired => 'danger',
-        $status === SubscriptionStatus::Suspended => 'muted',
-        $status === SubscriptionStatus::Cancelled => 'muted',
+        $status === SubscriptionStatus::Active => 'green',
+        $status === SubscriptionStatus::Pending => 'yellow',
+        $status === SubscriptionStatus::Expired => 'red',
+        $status === SubscriptionStatus::Suspended => 'zinc',
+        $status === SubscriptionStatus::Cancelled => 'zinc',
 
         // Order Statuses
-        $status === OrderStatus::PendingProvisioning => 'warning',
-        $status === OrderStatus::Provisioned => 'success',
-        $status === OrderStatus::ProvisioningFailed => 'danger',
+        $status === OrderStatus::PendingProvisioning => 'yellow',
+        $status === OrderStatus::Provisioned => 'green',
+        $status === OrderStatus::ProvisioningFailed => 'red',
 
         // Service Account Statuses
-        $status === ServiceAccountStatus::Active => 'success',
-        $status === ServiceAccountStatus::Suspended => 'muted',
-        $status === ServiceAccountStatus::Expired => 'danger',
+        $status === ServiceAccountStatus::Active => 'green',
+        $status === ServiceAccountStatus::Suspended => 'zinc',
+        $status === ServiceAccountStatus::Expired => 'red',
 
         // Provisioning Actions
-        $status === ProvisioningAction::Create => 'info',
-        $status === ProvisioningAction::Extend => 'info',
-        $status === ProvisioningAction::Suspend => 'warning',
+        $status === ProvisioningAction::Create => 'blue',
+        $status === ProvisioningAction::Extend => 'blue',
+        $status === ProvisioningAction::Suspend => 'yellow',
 
         // Default
-        default => 'muted',
+        default => 'zinc',
     };
 
     $label = $status->value ?? (string) $status;
 @endphp
 
-<flux:badge :variant="$variant" size="sm">
+<flux:badge :color="$color" size="sm">
     {{ $label }}
 </flux:badge>

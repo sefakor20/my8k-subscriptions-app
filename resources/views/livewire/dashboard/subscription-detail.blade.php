@@ -18,18 +18,18 @@
                             <div class="mt-1">
                                 @if ($this->subscription->status === \App\Enums\SubscriptionStatus::Active)
                                     @if ($this->subscription->expires_at && $this->subscription->expires_at->diffInDays(now()) <= 7 && $this->subscription->expires_at->isFuture())
-                                        <flux:badge variant="warning" icon="exclamation-triangle">Expiring Soon</flux:badge>
+                                        <flux:badge color="yellow" icon="exclamation-triangle">Expiring Soon</flux:badge>
                                     @else
-                                        <flux:badge variant="success" icon="check-circle">Active</flux:badge>
+                                        <flux:badge color="green" icon="check-circle">Active</flux:badge>
                                     @endif
                                 @elseif ($this->subscription->status === \App\Enums\SubscriptionStatus::Expired)
-                                    <flux:badge variant="danger" icon="x-circle">Expired</flux:badge>
+                                    <flux:badge color="red" icon="x-circle">Expired</flux:badge>
                                 @elseif ($this->subscription->status === \App\Enums\SubscriptionStatus::Suspended)
-                                    <flux:badge variant="warning" icon="pause">Suspended</flux:badge>
+                                    <flux:badge color="yellow" icon="pause">Suspended</flux:badge>
                                 @elseif ($this->subscription->status === \App\Enums\SubscriptionStatus::Cancelled)
-                                    <flux:badge variant="danger" icon="x-mark">Cancelled</flux:badge>
+                                    <flux:badge color="red" icon="x-mark">Cancelled</flux:badge>
                                 @elseif ($this->subscription->status === \App\Enums\SubscriptionStatus::Pending)
-                                    <flux:badge variant="info" icon="clock">Pending</flux:badge>
+                                    <flux:badge color="blue" icon="clock">Pending</flux:badge>
                                 @endif
                             </div>
                         </div>
@@ -386,7 +386,7 @@
                             </div>
                             <div class="flex justify-between">
                                 <flux:text variant="muted">Status</flux:text>
-                                <flux:badge variant="success">{{ $this->subscription->orders->first()->status->value }}</flux:badge>
+                                <flux:badge color="green">{{ $this->subscription->orders->first()->status->value }}</flux:badge>
                             </div>
                         </div>
                     </div>

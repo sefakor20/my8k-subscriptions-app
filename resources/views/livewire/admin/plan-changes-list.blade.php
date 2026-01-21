@@ -126,20 +126,20 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if ($planChange->isUpgrade())
-                                    <flux:badge variant="success" icon="arrow-trending-up">Upgrade</flux:badge>
+                                    <flux:badge color="green" icon="arrow-trending-up">Upgrade</flux:badge>
                                 @else
-                                    <flux:badge variant="warning" icon="arrow-trending-down">Downgrade</flux:badge>
+                                    <flux:badge color="yellow" icon="arrow-trending-down">Downgrade</flux:badge>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if ($planChange->status === \App\Enums\PlanChangeStatus::Completed)
-                                    <flux:badge variant="success" icon="check-circle">{{ $planChange->status->label() }}</flux:badge>
+                                    <flux:badge color="green" icon="check-circle">{{ $planChange->status->label() }}</flux:badge>
                                 @elseif ($planChange->status === \App\Enums\PlanChangeStatus::Scheduled)
-                                    <flux:badge variant="primary" icon="clock">{{ $planChange->status->label() }}</flux:badge>
+                                    <flux:badge color="blue" icon="clock">{{ $planChange->status->label() }}</flux:badge>
                                 @elseif ($planChange->status === \App\Enums\PlanChangeStatus::Pending)
-                                    <flux:badge variant="warning" icon="arrow-path">{{ $planChange->status->label() }}</flux:badge>
+                                    <flux:badge color="yellow" icon="arrow-path">{{ $planChange->status->label() }}</flux:badge>
                                 @elseif ($planChange->status === \App\Enums\PlanChangeStatus::Failed)
-                                    <flux:badge variant="danger" icon="x-circle">{{ $planChange->status->label() }}</flux:badge>
+                                    <flux:badge color="red" icon="x-circle">{{ $planChange->status->label() }}</flux:badge>
                                 @elseif ($planChange->status === \App\Enums\PlanChangeStatus::Cancelled)
                                     <flux:badge icon="minus-circle">{{ $planChange->status->label() }}</flux:badge>
                                 @else
