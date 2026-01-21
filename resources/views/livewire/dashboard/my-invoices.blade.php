@@ -47,11 +47,11 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @if ($invoice->status === \App\Enums\InvoiceStatus::Paid)
-                                        <flux:badge variant="success" icon="check-circle">{{ $invoice->status->label() }}</flux:badge>
+                                        <flux:badge color="green" icon="check-circle">{{ $invoice->status->label() }}</flux:badge>
                                     @elseif ($invoice->status === \App\Enums\InvoiceStatus::Issued)
-                                        <flux:badge variant="primary" icon="document-text">{{ $invoice->status->label() }}</flux:badge>
+                                        <flux:badge color="blue" icon="document-text">{{ $invoice->status->label() }}</flux:badge>
                                     @elseif ($invoice->status === \App\Enums\InvoiceStatus::Void)
-                                        <flux:badge variant="danger" icon="x-circle">{{ $invoice->status->label() }}</flux:badge>
+                                        <flux:badge color="red" icon="x-circle">{{ $invoice->status->label() }}</flux:badge>
                                     @else
                                         <flux:badge>{{ $invoice->status->label() }}</flux:badge>
                                     @endif

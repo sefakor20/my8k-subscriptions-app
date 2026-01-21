@@ -61,13 +61,13 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @if ($order->status === \App\Enums\OrderStatus::Provisioned)
-                                        <flux:badge variant="success" icon="check-circle">Provisioned</flux:badge>
+                                        <flux:badge color="green" icon="check-circle">Provisioned</flux:badge>
                                     @elseif ($order->status === \App\Enums\OrderStatus::PendingProvisioning)
-                                        <flux:badge variant="warning" icon="clock">Pending Provisioning</flux:badge>
+                                        <flux:badge color="yellow" icon="clock">Pending Provisioning</flux:badge>
                                     @elseif ($order->status === \App\Enums\OrderStatus::ProvisioningFailed)
-                                        <flux:badge variant="danger" icon="x-circle">Provisioning Failed</flux:badge>
+                                        <flux:badge color="red" icon="x-circle">Provisioning Failed</flux:badge>
                                     @elseif ($order->status === \App\Enums\OrderStatus::Refunded)
-                                        <flux:badge variant="warning" icon="arrow-uturn-left">Refunded</flux:badge>
+                                        <flux:badge color="yellow" icon="arrow-uturn-left">Refunded</flux:badge>
                                     @else
                                         <flux:badge>{{ $order->status->label() }}</flux:badge>
                                     @endif

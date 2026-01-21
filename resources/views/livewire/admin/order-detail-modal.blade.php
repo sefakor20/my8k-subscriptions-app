@@ -100,7 +100,7 @@
                                             <flux:text>{{ $log->action->value }} - Attempt #{{ $log->attempt }}</flux:text>
                                             <flux:text variant="muted" size="sm">{{ $log->created_at->diffForHumans() }}</flux:text>
                                         </div>
-                                        <flux:badge :variant="$log->status === 'success' ? 'success' : 'danger'" size="sm">
+                                        <flux:badge :color="$log->status === 'success' ? 'green' : 'red'" size="sm">
                                             {{ $log->status }}
                                         </flux:badge>
                                     </div>

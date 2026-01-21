@@ -103,18 +103,18 @@
                                     {{-- Status Badge --}}
                                     @if ($subscription->status === \App\Enums\SubscriptionStatus::Active)
                                         @if ($subscription->expires_at && $subscription->expires_at->diffInDays(now()) <= 7 && $subscription->expires_at->isFuture())
-                                            <flux:badge variant="warning" icon="exclamation-triangle">Expiring Soon</flux:badge>
+                                            <flux:badge color="yellow" icon="exclamation-triangle">Expiring Soon</flux:badge>
                                         @else
-                                            <flux:badge variant="success" icon="check-circle">Active</flux:badge>
+                                            <flux:badge color="green" icon="check-circle">Active</flux:badge>
                                         @endif
                                     @elseif ($subscription->status === \App\Enums\SubscriptionStatus::Expired)
-                                        <flux:badge variant="danger" icon="x-circle">Expired</flux:badge>
+                                        <flux:badge color="red" icon="x-circle">Expired</flux:badge>
                                     @elseif ($subscription->status === \App\Enums\SubscriptionStatus::Suspended)
-                                        <flux:badge variant="warning" icon="pause">Suspended</flux:badge>
+                                        <flux:badge color="yellow" icon="pause">Suspended</flux:badge>
                                     @elseif ($subscription->status === \App\Enums\SubscriptionStatus::Cancelled)
-                                        <flux:badge variant="danger" icon="x-mark">Cancelled</flux:badge>
+                                        <flux:badge color="red" icon="x-mark">Cancelled</flux:badge>
                                     @elseif ($subscription->status === \App\Enums\SubscriptionStatus::Pending)
-                                        <flux:badge variant="info" icon="clock">Pending</flux:badge>
+                                        <flux:badge color="blue" icon="clock">Pending</flux:badge>
                                     @endif
                                 </div>
 
