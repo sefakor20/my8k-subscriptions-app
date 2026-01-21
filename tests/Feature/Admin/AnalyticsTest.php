@@ -379,3 +379,110 @@ test('analytics sidebar link is active on analytics page', function () {
     $response->assertSee('Analytics');
     // Note: Icon rendering may vary, so we just verify the link text is present
 });
+
+test('custom date range can be applied', function () {
+    $admin = User::factory()->admin()->create();
+
+    Livewire::actingAs($admin)
+        ->test(Analytics::class)
+        ->assertSet('dateRangeType', 'preset')
+        ->set('customStartDate', '2024-01-01')
+        ->set('customEndDate', '2024-01-31')
+        ->call('applyCustomDateRange')
+        ->assertSet('dateRangeType', 'custom')
+        ->assertSet('customStartDate', '2024-01-01')
+        ->assertSet('customEndDate', '2024-01-31');
+});
+
+test('can switch back to preset date range', function () {
+    $admin = User::factory()->admin()->create();
+
+    Livewire::actingAs($admin)
+        ->test(Analytics::class)
+        ->set('dateRangeType', 'custom')
+        ->set('customStartDate', '2024-01-01')
+        ->set('customEndDate', '2024-01-31')
+        ->call('usePresetDateRange')
+        ->assertSet('dateRangeType', 'preset')
+        ->assertSet('customStartDate', null)
+        ->assertSet('customEndDate', null);
+});
+
+test('custom date range requires both start and end dates', function () {
+    $admin = User::factory()->admin()->create();
+
+    Livewire::actingAs($admin)
+        ->test(Analytics::class)
+        ->set('customStartDate', '2024-01-01')
+        ->set('customEndDate', null)
+        ->call('applyCustomDateRange')
+        ->assertSet('dateRangeType', 'preset');
+});
+
+test('csv export returns downloadable response', function () {
+    $admin = User::factory()->admin()->create();
+
+    ProvisioningLog::factory()->create([
+        'status' => ProvisioningStatus::Success,
+        'created_at' => now()->subDays(5),
+    ]);
+
+    $component = Livewire::actingAs($admin)
+        ->test(Analytics::class)
+        ->call('exportCsv');
+
+    $component->assertFileDownloaded();
+});
+
+test('export csv button is visible', function () {
+    $admin = User::factory()->admin()->create();
+
+    $response = $this->actingAs($admin)->get('/admin/analytics');
+
+    $response->assertSee('Export CSV');
+});
+
+test('preset and custom buttons are visible', function () {
+    $admin = User::factory()->admin()->create();
+
+    $response = $this->actingAs($admin)->get('/admin/analytics');
+
+    $response->assertSee('Preset');
+    $response->assertSee('Custom');
+});
+
+test('analytics service exports csv with correct structure', function () {
+    $admin = User::factory()->admin()->create();
+
+    ProvisioningLog::factory()->create([
+        'status' => ProvisioningStatus::Success,
+        'created_at' => now()->subDays(5),
+    ]);
+
+    $service = app(\App\Services\Admin\AnalyticsService::class);
+    $export = $service->exportToCsv(30);
+
+    expect($export)->toHaveKeys(['filename', 'content']);
+    expect($export['filename'])->toContain('analytics_');
+    expect($export['filename'])->toEndWith('.csv');
+    expect($export['content'])->toContain('Analytics Report');
+    expect($export['content'])->toContain('Performance Metrics');
+    expect($export['content'])->toContain('Daily Success Rate');
+    expect($export['content'])->toContain('Daily Revenue');
+});
+
+test('analytics service supports custom date range', function () {
+    $admin = User::factory()->admin()->create();
+
+    ProvisioningLog::factory()->create([
+        'status' => ProvisioningStatus::Success,
+        'created_at' => '2024-01-15',
+    ]);
+
+    $service = app(\App\Services\Admin\AnalyticsService::class);
+
+    $result = $service->getSuccessRateTimeSeries(null, '2024-01-01', '2024-01-31');
+
+    expect($result)->toHaveKeys(['labels', 'data']);
+    expect(count($result['labels']))->toBe(31);
+});

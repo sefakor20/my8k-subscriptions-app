@@ -14,23 +14,88 @@
         </div>
 
         {{-- Controls --}}
-        <div class="flex items-center gap-4">
-            {{-- Date Range Filter --}}
-            <div>
-                <flux:select wire:model.live="dateRange" class="w-48">
-                    <option value="7">Last 7 Days</option>
-                    <option value="14">Last 14 Days</option>
-                    <option value="30">Last 30 Days</option>
-                    <option value="60">Last 60 Days</option>
-                    <option value="90">Last 90 Days</option>
-                </flux:select>
-            </div>
+        <div class="flex items-center gap-3">
+            {{-- Date Range Dropdown --}}
+            <flux:dropdown>
+                <flux:button variant="ghost" icon:trailing="chevron-down" size="sm">
+                    @if($dateRangeType === 'custom')
+                        {{ $customStartDate }} - {{ $customEndDate }}
+                    @else
+                        Last {{ $dateRange }} Days
+                    @endif
+                </flux:button>
+                <flux:menu>
+                    <flux:menu.item wire:click="setPresetDateRange(7)">
+                        Last 7 Days
+                    </flux:menu.item>
+                    <flux:menu.item wire:click="setPresetDateRange(14)">
+                        Last 14 Days
+                    </flux:menu.item>
+                    <flux:menu.item wire:click="setPresetDateRange(30)">
+                        Last 30 Days
+                    </flux:menu.item>
+                    <flux:menu.item wire:click="setPresetDateRange(60)">
+                        Last 60 Days
+                    </flux:menu.item>
+                    <flux:menu.item wire:click="setPresetDateRange(90)">
+                        Last 90 Days
+                    </flux:menu.item>
+                    <flux:menu.separator />
+                    <flux:menu.item icon="calendar" x-on:click="$refs.customDateModal.showModal()">
+                        Custom Range...
+                    </flux:menu.item>
+                </flux:menu>
+            </flux:dropdown>
 
-            {{-- Refresh Button --}}
-            <flux:button wire:click="refreshData" icon="arrow-path" variant="ghost" size="sm">
-                Refresh
-            </flux:button>
+            {{-- Actions Dropdown --}}
+            <flux:dropdown align="end">
+                <flux:button variant="ghost" icon="ellipsis-vertical" size="sm" />
+                <flux:menu>
+                    <flux:menu.item wire:click="exportCsv" icon="arrow-down-tray">
+                        Export CSV
+                    </flux:menu.item>
+                    <flux:menu.item wire:click="refreshData" icon="arrow-path">
+                        Refresh Data
+                    </flux:menu.item>
+                </flux:menu>
+            </flux:dropdown>
         </div>
+
+        {{-- Custom Date Range Modal --}}
+        <dialog x-ref="customDateModal" class="rounded-lg bg-white dark:bg-zinc-900 p-6 shadow-xl backdrop:bg-black/50">
+            <form method="dialog" class="space-y-4">
+                <flux:heading size="lg">Custom Date Range</flux:heading>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <flux:field>
+                            <flux:label>Start Date</flux:label>
+                            <flux:input type="date" wire:model="customStartDate" />
+                        </flux:field>
+                    </div>
+                    <div>
+                        <flux:field>
+                            <flux:label>End Date</flux:label>
+                            <flux:input type="date" wire:model="customEndDate" />
+                        </flux:field>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4">
+                    <flux:button type="button" variant="ghost" onclick="this.closest('dialog').close()">
+                        Cancel
+                    </flux:button>
+                    <flux:button
+                        type="button"
+                        variant="primary"
+                        wire:click="applyCustomDateRange"
+                        onclick="this.closest('dialog').close()"
+                    >
+                        Apply
+                    </flux:button>
+                </div>
+            </form>
+        </dialog>
     </div>
 
     {{-- Metrics Cards --}}

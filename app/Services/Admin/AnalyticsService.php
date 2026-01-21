@@ -9,6 +9,7 @@ use App\Enums\ProvisioningStatus;
 use App\Models\Order;
 use App\Models\ProvisioningLog;
 use App\Models\Subscription;
+use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -21,20 +22,40 @@ class AnalyticsService
     private const CACHE_DURATION = 300;
 
     /**
-     * Get success rate data for the last N days
+     * Get start and end dates from days or custom range
+     *
+     * @return array{start: Carbon, end: Carbon, cacheKey: string}
+     */
+    private function getDateRange(?int $days = null, ?string $startDate = null, ?string $endDate = null): array
+    {
+        if ($startDate && $endDate) {
+            $start = Carbon::parse($startDate)->startOfDay();
+            $end = Carbon::parse($endDate)->endOfDay();
+            $cacheKey = "custom.{$start->format('Y-m-d')}.{$end->format('Y-m-d')}";
+        } else {
+            $days = $days ?? 30;
+            $start = now()->subDays($days - 1)->startOfDay();
+            $end = now()->endOfDay();
+            $cacheKey = "{$days}d";
+        }
+
+        return ['start' => $start, 'end' => $end, 'cacheKey' => $cacheKey];
+    }
+
+    /**
+     * Get success rate data for the specified date range
      *
      * @return array{labels: array<string>, data: array<float>}
      */
-    public function getSuccessRateTimeSeries(int $days = 30): array
+    public function getSuccessRateTimeSeries(?int $days = 30, ?string $startDate = null, ?string $endDate = null): array
     {
-        return Cache::remember(
-            "admin.analytics.success_rate.{$days}d",
-            self::CACHE_DURATION,
-            function () use ($days): array {
-                $startDate = now()->subDays($days - 1)->startOfDay();
-                $endDate = now()->endOfDay();
+        $range = $this->getDateRange($days, $startDate, $endDate);
 
-                $period = CarbonPeriod::create($startDate, '1 day', $endDate);
+        return Cache::remember(
+            "admin.analytics.success_rate.{$range['cacheKey']}",
+            self::CACHE_DURATION,
+            function () use ($range): array {
+                $period = CarbonPeriod::create($range['start'], '1 day', $range['end']);
 
                 $labels = [];
                 $data = [];
@@ -103,16 +124,16 @@ class AnalyticsService
      *
      * @return array{labels: array<string>, data: array<int>}
      */
-    public function getErrorTypeFrequency(int $days = 30): array
+    public function getErrorTypeFrequency(?int $days = 30, ?string $startDate = null, ?string $endDate = null): array
     {
-        return Cache::remember(
-            "admin.analytics.error_frequency.{$days}d",
-            self::CACHE_DURATION,
-            function () use ($days): array {
-                $startDate = now()->subDays($days)->startOfDay();
+        $range = $this->getDateRange($days, $startDate, $endDate);
 
+        return Cache::remember(
+            "admin.analytics.error_frequency.{$range['cacheKey']}",
+            self::CACHE_DURATION,
+            function () use ($range): array {
                 $errors = ProvisioningLog::where('status', ProvisioningStatus::Failed)
-                    ->where('created_at', '>=', $startDate)
+                    ->whereBetween('created_at', [$range['start'], $range['end']])
                     ->get();
 
                 // Group errors by type/message
@@ -154,15 +175,15 @@ class AnalyticsService
      *     pendingCount: int
      * }
      */
-    public function getProvisioningPerformance(int $days = 30): array
+    public function getProvisioningPerformance(?int $days = 30, ?string $startDate = null, ?string $endDate = null): array
     {
-        return Cache::remember(
-            "admin.analytics.provisioning_performance.{$days}d",
-            self::CACHE_DURATION,
-            function () use ($days): array {
-                $startDate = now()->subDays($days)->startOfDay();
+        $range = $this->getDateRange($days, $startDate, $endDate);
 
-                $logs = ProvisioningLog::where('created_at', '>=', $startDate)->get();
+        return Cache::remember(
+            "admin.analytics.provisioning_performance.{$range['cacheKey']}",
+            self::CACHE_DURATION,
+            function () use ($range): array {
+                $logs = ProvisioningLog::whereBetween('created_at', [$range['start'], $range['end']])->get();
 
                 $total = $logs->count();
 
@@ -209,16 +230,15 @@ class AnalyticsService
      *
      * @return array{labels: array<string>, data: array<int>}
      */
-    public function getSubscriptionGrowth(int $days = 30): array
+    public function getSubscriptionGrowth(?int $days = 30, ?string $startDate = null, ?string $endDate = null): array
     {
-        return Cache::remember(
-            "admin.analytics.subscription_growth.{$days}d",
-            self::CACHE_DURATION,
-            function () use ($days): array {
-                $startDate = now()->subDays($days - 1)->startOfDay();
-                $endDate = now()->endOfDay();
+        $range = $this->getDateRange($days, $startDate, $endDate);
 
-                $period = CarbonPeriod::create($startDate, '1 day', $endDate);
+        return Cache::remember(
+            "admin.analytics.subscription_growth.{$range['cacheKey']}",
+            self::CACHE_DURATION,
+            function () use ($range): array {
+                $period = CarbonPeriod::create($range['start'], '1 day', $range['end']);
 
                 $labels = [];
                 $data = [];
@@ -246,16 +266,15 @@ class AnalyticsService
      *
      * @return array{labels: array<string>, data: array<float>}
      */
-    public function getRevenueTimeSeries(int $days = 30): array
+    public function getRevenueTimeSeries(?int $days = 30, ?string $startDate = null, ?string $endDate = null): array
     {
-        return Cache::remember(
-            "admin.analytics.revenue.{$days}d",
-            self::CACHE_DURATION,
-            function () use ($days): array {
-                $startDate = now()->subDays($days - 1)->startOfDay();
-                $endDate = now()->endOfDay();
+        $range = $this->getDateRange($days, $startDate, $endDate);
 
-                $period = CarbonPeriod::create($startDate, '1 day', $endDate);
+        return Cache::remember(
+            "admin.analytics.revenue.{$range['cacheKey']}",
+            self::CACHE_DURATION,
+            function () use ($range): array {
+                $period = CarbonPeriod::create($range['start'], '1 day', $range['end']);
 
                 $labels = [];
                 $data = [];
@@ -278,6 +297,91 @@ class AnalyticsService
                 ];
             },
         );
+    }
+
+    /**
+     * Export analytics data to CSV format
+     *
+     * @return array{filename: string, content: string}
+     */
+    public function exportToCsv(?int $days = 30, ?string $startDate = null, ?string $endDate = null): array
+    {
+        $range = $this->getDateRange($days, $startDate, $endDate);
+
+        $successRate = $this->getSuccessRateTimeSeries($days, $startDate, $endDate);
+        $revenue = $this->getRevenueTimeSeries($days, $startDate, $endDate);
+        $subscriptionGrowth = $this->getSubscriptionGrowth($days, $startDate, $endDate);
+        $performance = $this->getProvisioningPerformance($days, $startDate, $endDate);
+        $errors = $this->getErrorTypeFrequency($days, $startDate, $endDate);
+        $orderStatus = $this->getOrderStatusDistribution();
+
+        $output = fopen('php://temp', 'r+');
+
+        // Summary section
+        fputcsv($output, ['Analytics Report']);
+        fputcsv($output, ['Date Range', $range['start']->format('Y-m-d') . ' to ' . $range['end']->format('Y-m-d')]);
+        fputcsv($output, ['Generated', now()->toDateTimeString()]);
+        fputcsv($output, []);
+
+        // Performance metrics
+        fputcsv($output, ['Performance Metrics']);
+        fputcsv($output, ['Metric', 'Value']);
+        fputcsv($output, ['Total Provisioned', $performance['totalProvisioned']]);
+        fputcsv($output, ['Success Rate', $performance['successRate'] . '%']);
+        fputcsv($output, ['Failure Rate', $performance['failureRate'] . '%']);
+        fputcsv($output, ['Avg Duration (seconds)', $performance['avgDuration']]);
+        fputcsv($output, ['Pending Count', $performance['pendingCount']]);
+        fputcsv($output, []);
+
+        // Daily success rate
+        fputcsv($output, ['Daily Success Rate']);
+        fputcsv($output, ['Date', 'Success Rate (%)']);
+        foreach ($successRate['labels'] as $i => $label) {
+            fputcsv($output, [$label, $successRate['data'][$i]]);
+        }
+        fputcsv($output, []);
+
+        // Daily revenue
+        fputcsv($output, ['Daily Revenue']);
+        fputcsv($output, ['Date', 'Revenue']);
+        foreach ($revenue['labels'] as $i => $label) {
+            fputcsv($output, [$label, $revenue['data'][$i]]);
+        }
+        fputcsv($output, []);
+
+        // Subscription growth
+        fputcsv($output, ['Subscription Growth']);
+        fputcsv($output, ['Date', 'Total Subscriptions']);
+        foreach ($subscriptionGrowth['labels'] as $i => $label) {
+            fputcsv($output, [$label, $subscriptionGrowth['data'][$i]]);
+        }
+        fputcsv($output, []);
+
+        // Order status distribution
+        fputcsv($output, ['Order Status Distribution']);
+        fputcsv($output, ['Status', 'Count']);
+        foreach ($orderStatus['labels'] as $i => $label) {
+            fputcsv($output, [$label, $orderStatus['data'][$i]]);
+        }
+        fputcsv($output, []);
+
+        // Error frequency
+        fputcsv($output, ['Top Error Types']);
+        fputcsv($output, ['Error', 'Count']);
+        foreach ($errors['labels'] as $i => $label) {
+            fputcsv($output, [$label, $errors['data'][$i]]);
+        }
+
+        rewind($output);
+        $content = stream_get_contents($output);
+        fclose($output);
+
+        $filename = 'analytics_' . $range['start']->format('Y-m-d') . '_to_' . $range['end']->format('Y-m-d') . '.csv';
+
+        return [
+            'filename' => $filename,
+            'content' => $content,
+        ];
     }
 
     /**
