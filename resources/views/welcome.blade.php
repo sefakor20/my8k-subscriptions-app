@@ -3,6 +3,8 @@
 
     <x-landing.features />
 
+    <x-landing.content-showcase />
+
     <x-landing.about />
 
     <livewire:landing.pricing-section />

@@ -49,6 +49,13 @@ it('displays the cta section', function () {
         ->assertSee('Ready to Transform');
 });
 
+it('displays the content showcase section', function () {
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('Enjoy Your Time')
+        ->assertSee('Enjoy Watching Now');
+});
+
 it('displays active monthly plans in pricing section', function () {
     $plan = Plan::factory()->monthly()->active()->create([
         'name' => 'Test Monthly Plan',
