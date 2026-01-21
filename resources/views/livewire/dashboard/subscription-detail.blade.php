@@ -221,7 +221,28 @@
                                                     title="Download M3U file"
                                                 />
                                             </a>
+                                            <flux:button
+                                                size="xs"
+                                                variant="ghost"
+                                                icon="qr-code"
+                                                wire:click="toggleM3uQrCode"
+                                                title="{{ $showM3uQrCode ? 'Hide QR Code' : 'Show QR Code' }}"
+                                            />
                                         </div>
+                                        @if ($showM3uQrCode && $this->m3uQrCodeSvg)
+                                            <div class="mt-3 flex flex-col items-center">
+                                                <div
+                                                    class="bg-white p-3 rounded border border-zinc-200 dark:border-zinc-700"
+                                                    x-data
+                                                    :style="($flux.appearance === 'dark' || ($flux.appearance === 'system' && $flux.dark)) ? 'filter: invert(1) brightness(1.5)' : ''"
+                                                >
+                                                    {!! $this->m3uQrCodeSvg !!}
+                                                </div>
+                                                <flux:text variant="muted" class="text-xs text-center mt-2">
+                                                    Scan with your IPTV app to auto-configure
+                                                </flux:text>
+                                            </div>
+                                        @endif
                                     </div>
                                 @endif
 
@@ -238,7 +259,28 @@
                                                 onclick="navigator.clipboard.writeText('{{ $this->getEpgUrl() }}'); alert('EPG URL copied to clipboard!');"
                                                 title="Copy EPG URL"
                                             />
+                                            <flux:button
+                                                size="xs"
+                                                variant="ghost"
+                                                icon="qr-code"
+                                                wire:click="toggleEpgQrCode"
+                                                title="{{ $showEpgQrCode ? 'Hide QR Code' : 'Show QR Code' }}"
+                                            />
                                         </div>
+                                        @if ($showEpgQrCode && $this->epgQrCodeSvg)
+                                            <div class="mt-3 flex flex-col items-center">
+                                                <div
+                                                    class="bg-white p-3 rounded border border-zinc-200 dark:border-zinc-700"
+                                                    x-data
+                                                    :style="($flux.appearance === 'dark' || ($flux.appearance === 'system' && $flux.dark)) ? 'filter: invert(1) brightness(1.5)' : ''"
+                                                >
+                                                    {!! $this->epgQrCodeSvg !!}
+                                                </div>
+                                                <flux:text variant="muted" class="text-xs text-center mt-2">
+                                                    Scan with your IPTV app for EPG guide
+                                                </flux:text>
+                                            </div>
+                                        @endif
                                     </div>
                                 @endif
 
