@@ -123,4 +123,19 @@ class SubscriptionPolicy
                && $subscription->status === \App\Enums\SubscriptionStatus::Active
                && $subscription->serviceAccount !== null;
     }
+
+    /**
+     * Determine whether the user can toggle auto-renewal for a subscription.
+     */
+    public function toggleAutoRenew(User $user, Subscription $subscription): bool
+    {
+        // Users can toggle auto-renewal for their own active subscriptions
+        // Admins can toggle for any subscription
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        return $user->id === $subscription->user_id
+               && $subscription->status === \App\Enums\SubscriptionStatus::Active;
+    }
 }

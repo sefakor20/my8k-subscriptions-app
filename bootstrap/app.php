@@ -34,6 +34,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function (Schedule $schedule): void {
+        // Process automatic subscription renewals
+        $schedule->command('subscriptions:renew')
+            ->daily()
+            ->at('00:30')
+            ->withoutOverlapping()
+            ->runInBackground();
+
         // Expire subscriptions that have passed their expiration date
         $schedule->command('subscriptions:expire')
             ->daily()

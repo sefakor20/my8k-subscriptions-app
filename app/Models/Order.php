@@ -123,6 +123,6 @@ class Order extends Model
 
         $symbol = $symbols[$this->currency] ?? $this->currency;
 
-        return $symbol . number_format($this->amount, 2);
+        return $symbol . number_format((float) $this->amount, 2);
     }
 }
