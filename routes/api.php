@@ -2,10 +2,20 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\HealthCheckController;
 use App\Http\Controllers\Api\PaystackWebhookController;
 use App\Http\Controllers\Api\StripeWebhookController;
 use App\Http\Controllers\Api\WooCommerceWebhookController;
 use Illuminate\Support\Facades\Route;
+
+// Health Check Routes
+Route::prefix('health')->group(function (): void {
+    Route::get('ping', [HealthCheckController::class, 'ping'])->name('health.ping');
+    Route::get('/', [HealthCheckController::class, 'check'])->name('health.check');
+    Route::get('detailed', [HealthCheckController::class, 'detailed'])
+        ->middleware(['web', 'auth', 'admin'])
+        ->name('health.detailed');
+});
 
 // WooCommerce Webhook Routes
 Route::prefix('v1/webhooks/woocommerce')

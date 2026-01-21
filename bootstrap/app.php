@@ -11,6 +11,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Route;
+use Sentry\Laravel\Integration;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -79,7 +80,13 @@ return Application::configure(basePath: dirname(__DIR__))
             ->everySixHours()
             ->withoutOverlapping()
             ->runInBackground();
+
+        // Monitor system health and send alerts for issues
+        $schedule->command('system:monitor-health')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->runInBackground();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        Integration::handles($exceptions);
     })->create();

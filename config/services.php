@@ -66,4 +66,11 @@ return [
         'currency' => env('STRIPE_CURRENCY', 'USD'),
     ],
 
+    'alerts' => [
+        'enabled' => env('ALERTS_ENABLED', false),
+        'slack_webhook_url' => env('ALERTS_SLACK_WEBHOOK_URL'),
+        'slack_channel' => env('ALERTS_SLACK_CHANNEL', '#alerts'),
+        'slack_username' => env('ALERTS_SLACK_USERNAME', 'System Alerts'),
+    ],
+
 ];
