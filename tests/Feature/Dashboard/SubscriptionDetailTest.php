@@ -262,3 +262,191 @@ test('does not display credentials for non-active subscriptions', function () {
         ->dispatch('open-subscription-detail', subscriptionId: $subscription->id)
         ->assertDontSee('Unlock Credentials');
 });
+
+test('customer can toggle auto renewal on', function () {
+    $user = User::factory()->create();
+    $subscription = Subscription::factory()->create([
+        'user_id' => $user->id,
+        'status' => SubscriptionStatus::Active,
+        'auto_renew' => false,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(SubscriptionDetail::class)
+        ->dispatch('open-subscription-detail', subscriptionId: $subscription->id)
+        ->call('toggleAutoRenewal');
+
+    expect($subscription->fresh()->auto_renew)->toBeTrue();
+});
+
+test('customer can toggle auto renewal off', function () {
+    $user = User::factory()->create();
+    $subscription = Subscription::factory()->create([
+        'user_id' => $user->id,
+        'status' => SubscriptionStatus::Active,
+        'auto_renew' => true,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(SubscriptionDetail::class)
+        ->dispatch('open-subscription-detail', subscriptionId: $subscription->id)
+        ->call('toggleAutoRenewal');
+
+    expect($subscription->fresh()->auto_renew)->toBeFalse();
+});
+
+test('auto renewal toggle requires active subscription', function () {
+    $user = User::factory()->create();
+    $subscription = Subscription::factory()->create([
+        'user_id' => $user->id,
+        'status' => SubscriptionStatus::Expired,
+        'auto_renew' => false,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(SubscriptionDetail::class)
+        ->dispatch('open-subscription-detail', subscriptionId: $subscription->id)
+        ->call('toggleAutoRenewal');
+
+    // Should not change since subscription is expired
+    expect($subscription->fresh()->auto_renew)->toBeFalse();
+});
+
+test('user cannot toggle auto renewal for other users subscription', function () {
+    $user1 = User::factory()->create();
+    $user2 = User::factory()->create();
+    $subscription = Subscription::factory()->create([
+        'user_id' => $user2->id,
+        'status' => SubscriptionStatus::Active,
+        'auto_renew' => true,
+    ]);
+
+    $component = Livewire::actingAs($user1)
+        ->test(SubscriptionDetail::class);
+
+    // Manually set subscription to bypass openModal authorization
+    $component->set('subscriptionId', $subscription->id);
+    $component->set('subscription', $subscription);
+
+    $component->call('toggleAutoRenewal')
+        ->assertForbidden();
+});
+
+test('renewal status displays correctly for active subscriptions', function () {
+    $user = User::factory()->create();
+    $subscription = Subscription::factory()->create([
+        'user_id' => $user->id,
+        'status' => SubscriptionStatus::Active,
+        'auto_renew' => true,
+        'expires_at' => now()->addDays(30),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(SubscriptionDetail::class)
+        ->dispatch('open-subscription-detail', subscriptionId: $subscription->id)
+        ->assertSee('Renewal Settings')
+        ->assertSee('Auto-Renewal')
+        ->assertSee('Your subscription will renew automatically');
+});
+
+test('activity timeline shows subscription events', function () {
+    $user = User::factory()->create();
+    $subscription = Subscription::factory()->create([
+        'user_id' => $user->id,
+        'status' => SubscriptionStatus::Active,
+    ]);
+
+    // Create an order with payment
+    Order::factory()->create([
+        'subscription_id' => $subscription->id,
+        'user_id' => $user->id,
+        'paid_at' => now()->subDays(5),
+        'provisioned_at' => now()->subDays(5),
+    ]);
+
+    $component = Livewire::actingAs($user)
+        ->test(SubscriptionDetail::class)
+        ->dispatch('open-subscription-detail', subscriptionId: $subscription->id);
+
+    $timeline = $component->instance()->activityTimeline;
+
+    expect($timeline)->not->toBeEmpty();
+    expect($timeline->pluck('type')->toArray())->toContain('created');
+});
+
+test('renew now button appears for expired subscriptions', function () {
+    $user = User::factory()->create();
+    $subscription = Subscription::factory()->create([
+        'user_id' => $user->id,
+        'status' => SubscriptionStatus::Expired,
+        'expires_at' => now()->subDays(5),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(SubscriptionDetail::class)
+        ->dispatch('open-subscription-detail', subscriptionId: $subscription->id)
+        ->assertSee('Renew Now')
+        ->assertSee('Your subscription has expired');
+});
+
+test('renew now button appears for expiring soon subscriptions', function () {
+    $user = User::factory()->create();
+    $subscription = Subscription::factory()->create([
+        'user_id' => $user->id,
+        'status' => SubscriptionStatus::Active,
+        'expires_at' => now()->addDays(2),
+    ]);
+
+    $component = Livewire::actingAs($user)
+        ->test(SubscriptionDetail::class)
+        ->dispatch('open-subscription-detail', subscriptionId: $subscription->id);
+
+    expect($component->instance()->canRenew())->toBeTrue();
+});
+
+test('renewal url is generated correctly', function () {
+    $user = User::factory()->create();
+    $subscription = Subscription::factory()->create([
+        'user_id' => $user->id,
+        'status' => SubscriptionStatus::Expired,
+    ]);
+
+    $component = Livewire::actingAs($user)
+        ->test(SubscriptionDetail::class)
+        ->dispatch('open-subscription-detail', subscriptionId: $subscription->id);
+
+    $renewalUrl = $component->instance()->getRenewalUrl();
+
+    expect($renewalUrl)->toContain('checkout/plan')
+        ->toContain($subscription->plan->id);
+});
+
+test('displays last renewal date when available', function () {
+    $user = User::factory()->create();
+    $subscription = Subscription::factory()->create([
+        'user_id' => $user->id,
+        'status' => SubscriptionStatus::Active,
+        'last_renewal_at' => now()->subDays(30),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(SubscriptionDetail::class)
+        ->dispatch('open-subscription-detail', subscriptionId: $subscription->id)
+        ->assertSee('Last Renewed');
+});
+
+test('displays credit balance when available', function () {
+    $user = User::factory()->create();
+    $subscription = Subscription::factory()->create([
+        'user_id' => $user->id,
+        'status' => SubscriptionStatus::Active,
+        'credit_balance' => 25.50,
+        'currency' => 'GHS',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(SubscriptionDetail::class)
+        ->dispatch('open-subscription-detail', subscriptionId: $subscription->id)
+        ->assertSee('Credit Balance')
+        ->assertSee('25.50');
+});

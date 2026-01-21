@@ -150,6 +150,23 @@
                                                 <span>Account: {{ $subscription->serviceAccount->username }}</span>
                                             </div>
                                         @endif
+
+                                        {{-- Auto-renewal status --}}
+                                        @if ($subscription->status === \App\Enums\SubscriptionStatus::Active)
+                                            <div class="flex items-center gap-1.5 {{ $subscription->auto_renew ? 'text-green-600 dark:text-green-400' : 'text-zinc-500 dark:text-zinc-500' }}">
+                                                <flux:icon.arrow-path class="w-4 h-4" />
+                                                @if ($subscription->auto_renew)
+                                                    <span>Auto-renew: On</span>
+                                                    @if ($subscription->next_renewal_at || $subscription->expires_at)
+                                                        <span class="text-zinc-500 dark:text-zinc-500">
+                                                            ({{ ($subscription->next_renewal_at ?? $subscription->expires_at->subDay())->format('M d') }})
+                                                        </span>
+                                                    @endif
+                                                @else
+                                                    <span>Auto-renew: Off</span>
+                                                @endif
+                                            </div>
+                                        @endif
                                     </div>
 
                                     @if ($subscription->plan->features)
