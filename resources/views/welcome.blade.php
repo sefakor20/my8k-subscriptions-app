@@ -3,6 +3,8 @@
 
     <x-landing.features />
 
+    <x-landing.more-to-stream />
+
     <x-landing.content-showcase />
 
     <x-landing.about />
