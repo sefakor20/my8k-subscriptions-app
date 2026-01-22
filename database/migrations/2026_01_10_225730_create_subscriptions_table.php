@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->uuid('id')->primary();
             $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
             $table->foreignUuid('plan_id')->constrained()->cascadeOnDelete();
-            $table->foreignUuid('service_account_id')->nullable()->constrained()->nullOnDelete();
+            $table->uuid('service_account_id')->nullable();
             $table->string('status'); // Stores SubscriptionStatus enum value
             $table->string('woocommerce_subscription_id')->nullable()->unique();
             $table->timestamp('starts_at');
