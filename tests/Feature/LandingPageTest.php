@@ -64,6 +64,15 @@ it('displays the content showcase section', function () {
         ->assertSee('Enjoy Watching Now');
 });
 
+it('displays the sports and news section', function () {
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('Favorite Match')
+        ->assertSee('View All Fotball Leagues')
+        ->assertSee('Updated News')
+        ->assertSee('View All News Channel');
+});
+
 it('displays active monthly plans in pricing section', function () {
     $plan = Plan::factory()->monthly()->active()->create([
         'name' => 'Test Monthly Plan',

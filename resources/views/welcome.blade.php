@@ -7,6 +7,8 @@
 
     <x-landing.content-showcase />
 
+    <x-landing.sports-news />
+
     <x-landing.about />
 
     <livewire:landing.pricing-section />
