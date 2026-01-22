@@ -14,14 +14,14 @@ return new class extends Migration {
     {
         Schema::create('support_tickets', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
             $table->foreignUuid('subscription_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignUuid('order_id')->nullable()->constrained()->onDelete('set null');
             $table->string('subject');
             $table->enum('category', ['technical', 'billing', 'account', 'general']);
             $table->enum('priority', ['low', 'normal', 'high', 'urgent'])->default('normal');
             $table->enum('status', ['open', 'in_progress', 'waiting_customer', 'resolved', 'closed'])->default('open');
-            $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignUuid('assigned_to')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('first_response_at')->nullable();
             $table->timestamp('resolved_at')->nullable();
             $table->timestamp('closed_at')->nullable();
