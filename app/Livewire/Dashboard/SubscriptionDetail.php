@@ -6,6 +6,7 @@ namespace App\Livewire\Dashboard;
 
 use App\Enums\SubscriptionStatus;
 use App\Models\Subscription;
+use App\Services\QrCodeService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
@@ -26,6 +27,10 @@ class SubscriptionDetail extends Component
 
     public bool $showAutoRenewConfirm = false;
 
+    public bool $showM3uQrCode = false;
+
+    public bool $showEpgQrCode = false;
+
     /**
      * Open the modal
      */
@@ -37,6 +42,8 @@ class SubscriptionDetail extends Component
         $this->show = true;
         $this->showPassword = false;
         $this->credentialsUnlocked = false;
+        $this->showM3uQrCode = false;
+        $this->showEpgQrCode = false;
     }
 
     /**
@@ -80,6 +87,22 @@ class SubscriptionDetail extends Component
     }
 
     /**
+     * Toggle M3U QR code visibility
+     */
+    public function toggleM3uQrCode(): void
+    {
+        $this->showM3uQrCode = ! $this->showM3uQrCode;
+    }
+
+    /**
+     * Toggle EPG QR code visibility
+     */
+    public function toggleEpgQrCode(): void
+    {
+        $this->showEpgQrCode = ! $this->showEpgQrCode;
+    }
+
+    /**
      * Get M3U download URL
      */
     public function getM3uUrl(): ?string
@@ -115,6 +138,36 @@ class SubscriptionDetail extends Component
             $account->username,
             $account->password,
         );
+    }
+
+    /**
+     * Get M3U QR code SVG
+     */
+    #[Computed]
+    public function m3uQrCodeSvg(): ?string
+    {
+        $url = $this->getM3uUrl();
+
+        if (! $url) {
+            return null;
+        }
+
+        return app(QrCodeService::class)->generateSvg($url);
+    }
+
+    /**
+     * Get EPG QR code SVG
+     */
+    #[Computed]
+    public function epgQrCodeSvg(): ?string
+    {
+        $url = $this->getEpgUrl();
+
+        if (! $url) {
+            return null;
+        }
+
+        return app(QrCodeService::class)->generateSvg($url);
     }
 
     /**
@@ -360,6 +413,8 @@ class SubscriptionDetail extends Component
         $this->showPassword = false;
         $this->credentialsUnlocked = false;
         $this->showAutoRenewConfirm = false;
+        $this->showM3uQrCode = false;
+        $this->showEpgQrCode = false;
         unset($this->activityTimeline);
     }
 

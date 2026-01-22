@@ -9,7 +9,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'League Spartan', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
@@ -22,6 +22,15 @@
     --color-zinc-800: #262626;
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
+
+    /* MoTv Brand Colors */
+    --color-motv-bg: #0a0102;
+    --color-motv-bg-overlay: #0f0506;
+    --color-motv-primary: #c90e0e;
+    --color-motv-primary-hover: #e01010;
+    --color-motv-secondary: #f2e394;
+    --color-motv-neutral: #c0c0c0;
+    --color-motv-text-muted: #a0a0a0;
 
     --color-accent: var(--color-neutral-800);
     --color-accent-content: var(--color-neutral-800);
@@ -64,3 +73,34 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/* Hero Poster Row Animations */
+@keyframes poster-scroll-left {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+@keyframes poster-scroll-right {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+}
+
+.poster-row-left {
+    animation: poster-scroll-left 8s ease-out forwards;
+}
+
+.poster-row-right {
+    animation: poster-scroll-right 8s ease-out forwards;
+}
+
+.poster-row-delay-1 { animation-delay: 0s; }
+.poster-row-delay-2 { animation-delay: 0.3s; }
+.poster-row-delay-3 { animation-delay: 0.6s; }
+
+/* Accessibility: Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .poster-row-left,
+    .poster-row-right {
+        animation: none;
+    }
+}

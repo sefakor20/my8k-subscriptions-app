@@ -45,6 +45,10 @@
                             {{ __('Analytics') }}
                         </flux:sidebar.item>
 
+                        <flux:sidebar.item icon="users" :href="route('admin.analytics.cohorts')" :current="request()->routeIs('admin.analytics.cohorts')" wire:navigate>
+                            {{ __('Cohort Analysis') }}
+                        </flux:sidebar.item>
+
                         <flux:sidebar.item icon="credit-card" :href="route('admin.credits')" :current="request()->routeIs('admin.credits')" wire:navigate>
                             {{ __('Credits') }}
                         </flux:sidebar.item>

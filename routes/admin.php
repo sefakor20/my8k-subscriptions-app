@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Livewire\Admin\Analytics;
+use App\Livewire\Admin\CohortAnalysis;
 use App\Livewire\Admin\CouponAnalytics;
 use App\Livewire\Admin\CouponsList;
 use App\Livewire\Admin\Dashboard;
@@ -32,8 +33,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'verified', 'admin'])->group(function (): void {
     Route::get('/dashboard', Dashboard::class)->name('admin.dashboard');
 
-    // Analytics route
+    // Analytics routes
     Route::get('/analytics', Analytics::class)->name('admin.analytics');
+    Route::get('/analytics/cohorts', CohortAnalysis::class)->name('admin.analytics.cohorts');
 
     // Reseller credits management route
     Route::get('/credits', ResellerCreditsManagement::class)->name('admin.credits');

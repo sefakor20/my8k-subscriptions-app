@@ -34,7 +34,7 @@
         default => 'zinc',
     };
 
-    $label = $status->value ?? (string) $status;
+    $label = str()->headline($status->value) ?? (string) $status;
 @endphp
 
 <flux:badge :color="$color" size="sm">

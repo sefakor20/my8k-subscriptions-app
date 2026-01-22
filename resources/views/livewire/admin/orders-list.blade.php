@@ -40,7 +40,7 @@
                     <flux:select wire:model.live="statusFilter">
                         <option value="">All Statuses</option>
                         @foreach ($this->statuses as $status)
-                            <option value="{{ $status->value }}">{{ $status->value }}</option>
+                            <option value="{{ $status->value }}">{{ str()->headline($status->value) }}</option>
                         @endforeach
                     </flux:select>
                 </flux:field>
