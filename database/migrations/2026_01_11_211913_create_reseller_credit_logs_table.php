@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->decimal('change_amount', 10, 2)->nullable();
             $table->enum('change_type', ['debit', 'credit', 'adjustment', 'snapshot'])->nullable();
             $table->string('reason')->nullable();
-            $table->foreignId('related_provisioning_log_id')->nullable()->constrained('provisioning_logs')->onDelete('set null');
+            $table->foreignUuid('related_provisioning_log_id')->nullable()->constrained('provisioning_logs')->onDelete('set null');
             $table->json('api_response')->nullable();
             $table->timestamps();
 

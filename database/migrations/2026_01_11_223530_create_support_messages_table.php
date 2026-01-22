@@ -15,7 +15,7 @@ return new class extends Migration {
         Schema::create('support_messages', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('support_ticket_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
             $table->text('message');
             $table->boolean('is_internal_note')->default(false);
             $table->json('attachments')->nullable();
