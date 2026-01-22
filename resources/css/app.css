@@ -73,3 +73,34 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/* Hero Poster Row Animations */
+@keyframes poster-scroll-left {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+@keyframes poster-scroll-right {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+}
+
+.poster-row-left {
+    animation: poster-scroll-left 8s ease-out forwards;
+}
+
+.poster-row-right {
+    animation: poster-scroll-right 8s ease-out forwards;
+}
+
+.poster-row-delay-1 { animation-delay: 0s; }
+.poster-row-delay-2 { animation-delay: 0.3s; }
+.poster-row-delay-3 { animation-delay: 0.6s; }
+
+/* Accessibility: Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .poster-row-left,
+    .poster-row-right {
+        animation: none;
+    }
+}

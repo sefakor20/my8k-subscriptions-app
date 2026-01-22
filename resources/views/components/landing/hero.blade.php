@@ -1,11 +1,62 @@
 <section id="home" class="relative min-h-screen flex items-center pt-20">
-    {{-- Background with Gradient Overlay --}}
+    {{-- Background with Gradient Overlay (base layer) --}}
     <div class="absolute inset-0 bg-gradient-to-b from-motv-bg via-motv-bg/95 to-motv-bg-overlay z-0"></div>
 
     {{-- Decorative Elements --}}
     <div class="absolute inset-0 z-0 overflow-hidden">
         <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-motv-primary/10 rounded-full blur-3xl"></div>
         <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-motv-secondary/5 rounded-full blur-3xl"></div>
+    </div>
+
+    {{-- Animated Movie Poster Rows Background --}}
+    <div class="absolute inset-0 z-[1] overflow-hidden pointer-events-none">
+        {{-- Poster rows container --}}
+        <div class="absolute inset-0 flex flex-col justify-center gap-4">
+            {{-- Row 1: Scrolls LEFT, tilted --}}
+            <div class="relative -rotate-3 -ml-8">
+                <div class="flex gap-4 poster-row-left poster-row-delay-1" style="width: max-content;">
+                    @foreach(range(1, 10) as $i)
+                        <img src="https://picsum.photos/seed/hero1-{{ $i }}/180/270" alt=""
+                             class="w-28 md:w-36 lg:w-40 aspect-[2/3] object-cover rounded-xl shrink-0" loading="lazy" />
+                    @endforeach
+                    @foreach(range(1, 10) as $i)
+                        <img src="https://picsum.photos/seed/hero1-{{ $i }}/180/270" alt=""
+                             class="w-28 md:w-36 lg:w-40 aspect-[2/3] object-cover rounded-xl shrink-0" loading="lazy" />
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Row 2: Scrolls RIGHT, tilted opposite --}}
+            <div class="relative rotate-2 -mr-8">
+                <div class="flex gap-4 poster-row-right poster-row-delay-2" style="width: max-content;">
+                    @foreach(range(11, 20) as $i)
+                        <img src="https://picsum.photos/seed/hero2-{{ $i }}/180/270" alt=""
+                             class="w-28 md:w-36 lg:w-40 aspect-[2/3] object-cover rounded-xl shrink-0" loading="lazy" />
+                    @endforeach
+                    @foreach(range(11, 20) as $i)
+                        <img src="https://picsum.photos/seed/hero2-{{ $i }}/180/270" alt=""
+                             class="w-28 md:w-36 lg:w-40 aspect-[2/3] object-cover rounded-xl shrink-0" loading="lazy" />
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Row 3: Scrolls LEFT, slight tilt --}}
+            <div class="relative -rotate-1 -ml-12">
+                <div class="flex gap-4 poster-row-left poster-row-delay-3" style="width: max-content;">
+                    @foreach(range(21, 30) as $i)
+                        <img src="https://picsum.photos/seed/hero3-{{ $i }}/180/270" alt=""
+                             class="w-28 md:w-36 lg:w-40 aspect-[2/3] object-cover rounded-xl shrink-0" loading="lazy" />
+                    @endforeach
+                    @foreach(range(21, 30) as $i)
+                        <img src="https://picsum.photos/seed/hero3-{{ $i }}/180/270" alt=""
+                             class="w-28 md:w-36 lg:w-40 aspect-[2/3] object-cover rounded-xl shrink-0" loading="lazy" />
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        {{-- Dark gradient overlay for text readability (on top of posters) --}}
+        <div class="absolute inset-0 bg-gradient-to-b from-motv-bg/70 via-motv-bg/85 to-motv-bg"></div>
     </div>
 
     <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
