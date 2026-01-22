@@ -9,9 +9,9 @@
     </div>
 
     {{-- Animated Movie Poster Rows Background --}}
-    <div class="absolute inset-0 z-[1] overflow-hidden pointer-events-none">
+    <div class="absolute inset-0 z-[1] overflow-hidden pointer-events-none hidden md:block">
         {{-- Poster rows container --}}
-        <div class="absolute inset-0 flex flex-col justify-center gap-4">
+        <div class="absolute inset-0 flex flex-col justify-around py-20">
             {{-- Row 1: Scrolls LEFT, tilted --}}
             <div class="relative -rotate-3 -ml-8">
                 <div class="flex gap-4 poster-row-left poster-row-delay-1" style="width: max-content;">
