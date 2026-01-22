@@ -160,7 +160,7 @@ class My8kApiClient
 
         try {
             $response = $this->buildHttpClient()
-                ->get('', $params);
+                ->get($this->baseUrl, $params);
 
             $durationMs = (int) ((microtime(true) - $startTime) * 1000);
 
@@ -191,8 +191,7 @@ class My8kApiClient
      */
     private function buildHttpClient(): PendingRequest
     {
-        return Http::baseUrl($this->baseUrl)
-            ->timeout($this->timeout)
+        return Http::timeout($this->timeout)
             ->withHeaders([
                 'Accept' => 'application/json',
             ])
@@ -224,8 +223,13 @@ class My8kApiClient
         }
 
         // My8K API returns 'status' field to indicate success
-        // Successful responses have 'status' => 'OK' or similar
-        if (isset($body['status']) && mb_strtoupper($body['status']) === 'OK') {
+        // Successful responses have 'status' => 'OK', 'true', or boolean true
+        $statusOk = isset($body['status']) && (
+            $body['status'] === true ||
+            (is_string($body['status']) && in_array(mb_strtoupper($body['status']), ['OK', 'TRUE'], true))
+        );
+
+        if ($statusOk) {
             return [
                 'success' => true,
                 'data' => $body,

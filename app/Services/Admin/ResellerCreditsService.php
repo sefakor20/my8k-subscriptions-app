@@ -43,8 +43,8 @@ class ResellerCreditsService
                 try {
                     $response = $this->my8kClient->getResellerInfo();
 
-                    if (isset($response['credits'])) {
-                        return (float) $response['credits'];
+                    if ($response['success'] && isset($response['data']['credits'])) {
+                        return (float) $response['data']['credits'];
                     }
 
                     Log::warning('My8K API did not return credits field', ['response' => $response]);
@@ -68,7 +68,9 @@ class ResellerCreditsService
     {
         try {
             $response = $this->my8kClient->getResellerInfo();
-            $currentBalance = isset($response['credits']) ? (float) $response['credits'] : 0.0;
+            $currentBalance = ($response['success'] && isset($response['data']['credits']))
+                ? (float) $response['data']['credits']
+                : 0.0;
 
             $lastLog = ResellerCreditLog::latest()->first();
             $previousBalance = $lastLog?->balance;
@@ -93,7 +95,7 @@ class ResellerCreditsService
                 'change_type' => $changeType,
                 'reason' => $reason ?? 'Scheduled balance check',
                 'related_provisioning_log_id' => $provisioningLogId,
-                'api_response' => $response,
+                'api_response' => $response['data'] ?? $response,
             ]);
 
             // Clear cache after logging
