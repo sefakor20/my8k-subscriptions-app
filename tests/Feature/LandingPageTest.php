@@ -49,6 +49,14 @@ it('displays the cta section', function () {
         ->assertSee('Ready to Transform');
 });
 
+it('displays the more to stream section', function () {
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('Our Content')
+        ->assertSee('More to Stream')
+        ->assertSee('View Content List');
+});
+
 it('displays the content showcase section', function () {
     $this->get(route('home'))
         ->assertOk()
