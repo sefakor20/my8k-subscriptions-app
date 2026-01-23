@@ -288,7 +288,7 @@ class AnalyticsService
                         ->sum('amount');
 
                     $labels[] = $date->format('M d');
-                    $data[] = round($revenue, 2);
+                    $data[] = round((float) $revenue, 2);
                 }
 
                 return [

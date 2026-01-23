@@ -124,7 +124,7 @@ abstract class BaseProvisioningJob implements ShouldQueue
 
             $creditsService->logBalanceSnapshot(
                 reason: $reason,
-                provisioningLogId: (int) $provisioningLog->id,
+                provisioningLogId: $provisioningLog->id,
             );
 
             Log::debug('Credit usage logged', [
