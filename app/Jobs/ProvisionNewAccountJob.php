@@ -6,16 +6,19 @@ namespace App\Jobs;
 
 use App\Enums\OrderStatus;
 use App\Enums\ProvisioningAction;
+use App\Enums\ProvisioningStatus;
 use App\Enums\ServiceAccountStatus;
 use App\Mail\AccountCredentialsReady;
 use App\Mail\ProvisioningFailed;
 use App\Models\Order;
 use App\Models\Plan;
+use App\Models\ProvisioningLog;
 use App\Models\ServiceAccount;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Services\My8kApiClient;
 use Illuminate\Support\Facades\Mail;
+use Log;
 
 class ProvisionNewAccountJob extends BaseProvisioningJob
 {
@@ -53,8 +56,58 @@ class ProvisionNewAccountJob extends BaseProvisioningJob
      */
     protected function performProvisioning(): array
     {
-        $order = Order::findOrFail($this->orderId);
+        // IDEMPOTENCY CHECK 1: Already provisioned?
         $subscription = Subscription::findOrFail($this->subscriptionId);
+
+        if ($subscription->service_account_id) {
+            $serviceAccount = ServiceAccount::find($subscription->service_account_id);
+
+            if ($serviceAccount) {
+                Log::info('Provisioning skipped - ServiceAccount already exists', [
+                    'subscription_id' => $subscription->id,
+                    'service_account_id' => $serviceAccount->id,
+                    'my8k_account_id' => $serviceAccount->my8k_account_id,
+                ]);
+
+                return [
+                    'success' => true,
+                    'data' => [
+                        'user_id' => $serviceAccount->my8k_account_id,
+                        'username' => $serviceAccount->username,
+                        'password' => $serviceAccount->password,
+                    ],
+                    'message' => 'Already provisioned',
+                    'idempotent' => true,
+                ];
+            }
+        }
+
+        // IDEMPOTENCY CHECK 2: Check provisioning logs for previous successful My8K API call
+        $previousSuccess = $this->checkPreviousSuccessfulProvisioning($subscription->id);
+
+        if ($previousSuccess) {
+            Log::info('Provisioning using previous My8K account from logs', [
+                'subscription_id' => $subscription->id,
+                'my8k_account_id' => $previousSuccess['user_id'],
+                'from_attempt' => $previousSuccess['attempt'],
+            ]);
+
+            // Reuse the My8K account from previous attempt
+            $order = Order::findOrFail($this->orderId);
+            $plan = Plan::findOrFail($this->planId);
+
+            $this->onProvisioningSuccess($previousSuccess['data'], $order, $subscription);
+
+            return [
+                'success' => true,
+                'data' => $previousSuccess['data'],
+                'message' => 'Provisioned using previous My8K account',
+                'idempotent' => true,
+            ];
+        }
+
+        // Existing code starts here
+        $order = Order::findOrFail($this->orderId);
         $plan = Plan::findOrFail($this->planId);
 
         // Convert duration from days to months for My8K API
@@ -65,7 +118,7 @@ class ProvisionNewAccountJob extends BaseProvisioningJob
         $result = $apiClient->createM3uDevice(
             packId: $plan->my8k_plan_code,
             subMonths: $durationMonths,
-            notes: "Order #{$order->woocommerce_order_id}",
+            notes: 'Order #' . ($order->woocommerce_order_id ?: $order->id),
             country: 'ALL',
         );
 
@@ -75,7 +128,7 @@ class ProvisionNewAccountJob extends BaseProvisioningJob
             'type' => 'm3u',
             'pack' => $plan->my8k_plan_code,
             'sub' => $durationMonths,
-            'notes' => "Order #{$order->woocommerce_order_id}",
+            'notes' => 'Order #' . ($order->woocommerce_order_id ?: $order->id),
             'country' => 'ALL',
         ];
 
@@ -182,6 +235,48 @@ class ProvisionNewAccountJob extends BaseProvisioningJob
         return [
             'username' => $params['username'] ?? null,
             'password' => $params['password'] ?? null,
+        ];
+    }
+
+    /**
+     * Check if a previous provisioning attempt succeeded at My8K API level
+     * Returns the My8K response data if found, null otherwise
+     */
+    protected function checkPreviousSuccessfulProvisioning(string $subscriptionId): ?array
+    {
+        $log = ProvisioningLog::query()
+            ->where('subscription_id', $subscriptionId)
+            ->where('action', ProvisioningAction::Create)
+            ->whereNotNull('my8k_response')
+            ->where('status', '!=', ProvisioningStatus::Failed)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (! $log || ! $log->my8k_response) {
+            return null;
+        }
+
+        $response = $log->my8k_response;
+
+        // Check if My8K API call was successful
+        $statusOk = isset($response['status']) && (
+            $response['status'] === true
+            || (is_string($response['status']) && in_array(mb_strtoupper($response['status']), ['OK', 'TRUE'], true))
+        );
+
+        if (! $statusOk) {
+            return null;
+        }
+
+        // Verify it has user_id and credentials
+        if (! isset($response['user_id'])) {
+            return null;
+        }
+
+        return [
+            'data' => $response,
+            'user_id' => $response['user_id'],
+            'attempt' => $log->attempt_number,
         ];
     }
 

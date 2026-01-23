@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services\Admin;
 
+use App\Enums\OrderStatus;
 use App\Jobs\ProvisionNewAccountJob;
 use App\Models\Order;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 
 class OrderManagementService
 {
@@ -49,9 +52,37 @@ class OrderManagementService
     /**
      * Retry provisioning for an order
      */
-    public function retryProvisioning(string $orderId): void
+    public function retryProvisioning(string $orderId): array
     {
-        $order = Order::findOrFail($orderId);
+        $order = Order::with(['subscription.serviceAccount'])->findOrFail($orderId);
+
+        if ($order->status !== OrderStatus::ProvisioningFailed) {
+            throw new InvalidArgumentException('Can only retry failed provisioning orders');
+        }
+
+        // Check if already provisioned
+        if ($order->subscription && $order->subscription->service_account_id) {
+            $serviceAccount = $order->subscription->serviceAccount;
+
+            if ($serviceAccount) {
+                Log::warning('Attempted to retry already provisioned order', [
+                    'order_id' => $orderId,
+                    'service_account_id' => $serviceAccount->id,
+                ]);
+
+                // Update order status to Provisioned since it already has ServiceAccount
+                $order->update([
+                    'status' => OrderStatus::Provisioned,
+                    'provisioned_at' => $serviceAccount->activated_at ?? now(),
+                ]);
+
+                return [
+                    'success' => true,
+                    'message' => 'Order already provisioned',
+                    'order' => $order,
+                ];
+            }
+        }
 
         if ($order->subscription) {
             ProvisionNewAccountJob::dispatch(
@@ -60,5 +91,10 @@ class OrderManagementService
                 $order->subscription->plan_id,
             );
         }
+
+        return [
+            'success' => true,
+            'message' => 'Provisioning retry dispatched',
+        ];
     }
 }
