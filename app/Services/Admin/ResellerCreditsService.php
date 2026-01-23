@@ -64,7 +64,7 @@ class ResellerCreditsService
     /**
      * Log a balance snapshot to the database
      */
-    public function logBalanceSnapshot(?string $reason = null, ?int $provisioningLogId = null): ResellerCreditLog
+    public function logBalanceSnapshot(?string $reason = null, ?string $provisioningLogId = null): ResellerCreditLog
     {
         try {
             $response = $this->my8kClient->getResellerInfo();
