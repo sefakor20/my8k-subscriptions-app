@@ -225,8 +225,8 @@ class My8kApiClient
         // My8K API returns 'status' field to indicate success
         // Successful responses have 'status' => 'OK', 'true', or boolean true
         $statusOk = isset($body['status']) && (
-            $body['status'] === true ||
-            (is_string($body['status']) && in_array(mb_strtoupper($body['status']), ['OK', 'TRUE'], true))
+            $body['status'] === true
+            || (is_string($body['status']) && in_array(mb_strtoupper($body['status']), ['OK', 'TRUE'], true))
         );
 
         if ($statusOk) {
