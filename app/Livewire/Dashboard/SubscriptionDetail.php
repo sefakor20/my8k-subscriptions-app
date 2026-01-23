@@ -176,8 +176,9 @@ class SubscriptionDetail extends Component
     public function openChangePlanModal(): void
     {
         if ($this->subscriptionId) {
+            $subscriptionId = $this->subscriptionId;
             $this->closeModal();
-            $this->dispatch('open-change-plan-modal', subscriptionId: $this->subscriptionId);
+            $this->dispatch('open-change-plan-modal', subscriptionId: $subscriptionId);
         }
     }
 
