@@ -17,7 +17,7 @@
                             <flux:text variant="muted" class="text-sm">Status</flux:text>
                             <div class="mt-1">
                                 @if ($this->subscription->status === \App\Enums\SubscriptionStatus::Active)
-                                    @if ($this->subscription->expires_at && $this->subscription->expires_at->diffInDays(now()) <= 7 && $this->subscription->expires_at->isFuture())
+                                    @if ($this->subscription->expires_at && now()->diffInDays($this->subscription->expires_at) <= 7 && $this->subscription->expires_at->isFuture())
                                         <flux:badge color="yellow" icon="exclamation-triangle">Expiring Soon</flux:badge>
                                     @else
                                         <flux:badge color="green" icon="check-circle">Active</flux:badge>
