@@ -1,4 +1,4 @@
-<flux:modal :open="$show" @close="closeModal" class="max-w-4xl">
+<flux:modal wire:model.self="show" @close="closeModal" class="max-w-4xl">
     @if ($this->order)
         <div class="p-6">
             {{-- Header --}}
