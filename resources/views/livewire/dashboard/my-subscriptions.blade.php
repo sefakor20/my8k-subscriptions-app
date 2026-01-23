@@ -95,7 +95,7 @@
             @foreach ($this->subscriptions as $subscription)
                 <div class="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors">
                     <div class="p-6">
-                        <div class="flex items-start justify-between">
+                        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                             <div class="flex-1">
                                 <div class="flex items-center gap-3 mb-2">
                                     <flux:heading size="lg">{{ $subscription->plan->name }}</flux:heading>
@@ -182,7 +182,7 @@
                                 </div>
                             </div>
 
-                            <div class="ml-6 flex items-center gap-2">
+                            <div class="flex items-center gap-2 lg:ml-6">
                                 @if ($subscription->status === \App\Enums\SubscriptionStatus::Active && $subscription->expires_at?->isFuture())
                                     <flux:button
                                         wire:click="changePlan('{{ $subscription->id }}')"
