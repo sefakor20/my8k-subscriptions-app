@@ -38,16 +38,19 @@ test('dry run does not modify subscriptions', function () {
 test('reconciles subscriptions with pending status but active service account', function () {
     $user = User::factory()->create();
 
-    $serviceAccount = ServiceAccount::factory()->create([
-        'user_id' => $user->id,
-        'status' => ServiceAccountStatus::Active,
-    ]);
-
     $subscription = Subscription::factory()->create([
         'user_id' => $user->id,
-        'service_account_id' => $serviceAccount->id,
         'status' => SubscriptionStatus::Pending,
     ]);
+
+    $serviceAccount = ServiceAccount::factory()->create([
+        'subscription_id' => $subscription->id,
+        'user_id' => $user->id,
+        'status' => ServiceAccountStatus::Active,
+        'expires_at' => now()->addDays(30),
+    ]);
+
+    $subscription->update(['service_account_id' => $serviceAccount->id]);
 
     $this->artisan('subscriptions:reconcile-provisioned-status')
         ->assertSuccessful();
@@ -61,16 +64,19 @@ test('respects limit option', function () {
 
     // Create 3 subscriptions with inconsistent state
     foreach (range(1, 3) as $i) {
-        $serviceAccount = ServiceAccount::factory()->create([
+        $subscription = Subscription::factory()->create([
             'user_id' => $user->id,
-            'status' => ServiceAccountStatus::Active,
-        ]);
-
-        Subscription::factory()->create([
-            'user_id' => $user->id,
-            'service_account_id' => $serviceAccount->id,
             'status' => SubscriptionStatus::Pending,
         ]);
+
+        $serviceAccount = ServiceAccount::factory()->create([
+            'subscription_id' => $subscription->id,
+            'user_id' => $user->id,
+            'status' => ServiceAccountStatus::Active,
+            'expires_at' => now()->addDays(30),
+        ]);
+
+        $subscription->update(['service_account_id' => $serviceAccount->id]);
     }
 
     $this->artisan('subscriptions:reconcile-provisioned-status --limit=2')
@@ -87,16 +93,19 @@ test('respects limit option', function () {
 test('updates both subscription and service account if needed', function () {
     $user = User::factory()->create();
 
-    $serviceAccount = ServiceAccount::factory()->create([
-        'user_id' => $user->id,
-        'status' => ServiceAccountStatus::Suspended,  // Not Active
-    ]);
-
     $subscription = Subscription::factory()->create([
         'user_id' => $user->id,
-        'service_account_id' => $serviceAccount->id,
         'status' => SubscriptionStatus::Pending,
     ]);
+
+    $serviceAccount = ServiceAccount::factory()->create([
+        'subscription_id' => $subscription->id,
+        'user_id' => $user->id,
+        'status' => ServiceAccountStatus::Suspended,  // Not Active
+        'expires_at' => now()->addDays(30),
+    ]);
+
+    $subscription->update(['service_account_id' => $serviceAccount->id]);
 
     $this->artisan('subscriptions:reconcile-provisioned-status')
         ->assertSuccessful();
@@ -189,16 +198,19 @@ test('processes multiple subscriptions correctly', function () {
 
     // Create 5 subscriptions with inconsistent state
     foreach (range(1, 5) as $i) {
-        $serviceAccount = ServiceAccount::factory()->create([
+        $subscription = Subscription::factory()->create([
             'user_id' => $user->id,
-            'status' => ServiceAccountStatus::Active,
-        ]);
-
-        Subscription::factory()->create([
-            'user_id' => $user->id,
-            'service_account_id' => $serviceAccount->id,
             'status' => SubscriptionStatus::Pending,
         ]);
+
+        $serviceAccount = ServiceAccount::factory()->create([
+            'subscription_id' => $subscription->id,
+            'user_id' => $user->id,
+            'status' => ServiceAccountStatus::Active,
+            'expires_at' => now()->addDays(30),
+        ]);
+
+        $subscription->update(['service_account_id' => $serviceAccount->id]);
     }
 
     $this->artisan('subscriptions:reconcile-provisioned-status')
