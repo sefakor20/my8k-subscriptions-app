@@ -153,27 +153,27 @@
                                     <flux:button variant="ghost" size="sm" icon="ellipsis-vertical" />
 
                                     <flux:menu>
-                                        <flux:menu.item wire:click="showDetail({{ $subscription->id }})" icon="eye">
+                                        <flux:menu.item wire:click="showDetail('{{ $subscription->id }}')" icon="eye">
                                             View Details
                                         </flux:menu.item>
 
-                                        <flux:menu.item wire:click="manualProvision({{ $subscription->id }})" icon="arrow-path">
+                                        <flux:menu.item wire:click="manualProvision('{{ $subscription->id }}')" icon="arrow-path">
                                             Retry Provisioning
                                         </flux:menu.item>
 
                                         @if ($subscription->status === \App\Enums\SubscriptionStatus::Active)
-                                            <flux:menu.item wire:click="suspend({{ $subscription->id }})" icon="pause-circle">
+                                            <flux:menu.item wire:click="suspend('{{ $subscription->id }}')" icon="pause-circle">
                                                 Suspend
                                             </flux:menu.item>
                                         @elseif ($subscription->status === \App\Enums\SubscriptionStatus::Suspended)
-                                            <flux:menu.item wire:click="reactivate({{ $subscription->id }})" icon="play-circle">
+                                            <flux:menu.item wire:click="reactivate('{{ $subscription->id }}')" icon="play-circle">
                                                 Reactivate
                                             </flux:menu.item>
                                         @endif
 
                                         <flux:menu.separator />
 
-                                        <flux:menu.item wire:click="cancel({{ $subscription->id }})" icon="x-circle" variant="danger">
+                                        <flux:menu.item wire:click="cancel('{{ $subscription->id }}')" icon="x-circle" variant="danger">
                                             Cancel Subscription
                                         </flux:menu.item>
                                     </flux:menu>
