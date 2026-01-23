@@ -349,7 +349,8 @@ class CohortAnalyticsService
             $totalCohorts = Subscription::query()
                 ->select(DB::raw("{$dateFormat} as cohort_month"))
                 ->where('created_at', '>=', now()->subMonths(12))
-                ->groupBy('cohort_month')
+                ->groupBy(DB::raw($dateFormat))
+                ->get()
                 ->count();
 
             return [
