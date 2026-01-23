@@ -102,7 +102,7 @@
 
                                     {{-- Status Badge --}}
                                     @if ($subscription->status === \App\Enums\SubscriptionStatus::Active)
-                                        @if ($subscription->expires_at && $subscription->expires_at->diffInDays(now()) <= 7 && $subscription->expires_at->isFuture())
+                                        @if ($subscription->expires_at && now()->diffInDays($subscription->expires_at) <= 7 && $subscription->expires_at->isFuture())
                                             <flux:badge color="yellow" icon="exclamation-triangle">Expiring Soon</flux:badge>
                                         @else
                                             <flux:badge color="green" icon="check-circle">Active</flux:badge>

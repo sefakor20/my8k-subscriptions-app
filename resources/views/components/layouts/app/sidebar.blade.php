@@ -14,7 +14,7 @@
                 @if(!auth()->user()?->isAdmin())
                     <flux:sidebar.group :heading="__('My Account')" class="grid">
                         <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                            {{ __('Overview') }}
+                            {{ __('My Subscriptions') }}
                         </flux:sidebar.item>
 
                         <flux:sidebar.item icon="shopping-bag" :href="route('orders.index')" :current="request()->routeIs('orders.*')" wire:navigate>
