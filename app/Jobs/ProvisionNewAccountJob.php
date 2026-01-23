@@ -91,11 +91,21 @@ class ProvisionNewAccountJob extends BaseProvisioningJob
      */
     protected function onProvisioningSuccess(array $responseData, Order $order, Subscription $subscription): void
     {
-        // Extract credentials from My8K response
-        $my8kAccountId = $responseData['user_id'] ?? null;
+        // Extract M3U URL (API might return 'url' or 'm3u_url')
+        $m3uUrl = $responseData['m3u_url'] ?? $responseData['url'] ?? null;
+
+        // Extract credentials from response or URL
         $username = $responseData['username'] ?? null;
         $password = $responseData['password'] ?? null;
-        $m3uUrl = $responseData['m3u_url'] ?? null;
+
+        // If credentials not in response, extract from URL
+        if (! $username || ! $password) {
+            $extracted = $this->extractCredentialsFromUrl($m3uUrl);
+            $username = $username ?? $extracted['username'];
+            $password = $password ?? $extracted['password'];
+        }
+
+        $my8kAccountId = $responseData['user_id'] ?? null;
 
         // Parse server URL from M3U URL if available
         $serverUrl = $this->extractServerUrl($m3uUrl);
@@ -150,6 +160,29 @@ class ProvisionNewAccountJob extends BaseProvisioningJob
         $port = $parsed['port'] ?? 80;
 
         return "{$parsed['scheme']}://{$parsed['host']}:{$port}";
+    }
+
+    /**
+     * Extract credentials from M3U URL query parameters
+     */
+    protected function extractCredentialsFromUrl(?string $url): array
+    {
+        if (! $url) {
+            return ['username' => null, 'password' => null];
+        }
+
+        $parsed = parse_url($url);
+
+        if (! isset($parsed['query'])) {
+            return ['username' => null, 'password' => null];
+        }
+
+        parse_str($parsed['query'], $params);
+
+        return [
+            'username' => $params['username'] ?? null,
+            'password' => $params['password'] ?? null,
+        ];
     }
 
     /**
