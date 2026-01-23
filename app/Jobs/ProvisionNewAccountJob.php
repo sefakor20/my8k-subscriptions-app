@@ -8,6 +8,7 @@ use App\Enums\OrderStatus;
 use App\Enums\ProvisioningAction;
 use App\Enums\ProvisioningStatus;
 use App\Enums\ServiceAccountStatus;
+use App\Enums\SubscriptionStatus;
 use App\Mail\AccountCredentialsReady;
 use App\Mail\ProvisioningFailed;
 use App\Models\Order;
@@ -112,10 +113,11 @@ class ProvisionNewAccountJob extends BaseProvisioningJob
                     'provisioned_at' => $existingServiceAccount->activated_at ?? now(),
                 ]);
 
-                // Ensure subscription is linked (should already be, but just in case)
+                // Ensure subscription is linked and active (should already be, but just in case)
                 if ($subscription->service_account_id !== $existingServiceAccount->id) {
                     $subscription->update([
                         'service_account_id' => $existingServiceAccount->id,
+                        'status' => SubscriptionStatus::Active,
                     ]);
                 }
 
@@ -225,9 +227,10 @@ class ProvisionNewAccountJob extends BaseProvisioningJob
                 'provisioned_at' => now(),
             ]);
 
-            // Link ServiceAccount to Subscription
+            // Link ServiceAccount to Subscription and activate it
             $subscription->update([
                 'service_account_id' => $serviceAccount->id,
+                'status' => SubscriptionStatus::Active,
             ]);
 
             return $serviceAccount;
