@@ -107,7 +107,8 @@ class ResellerCreditAlert extends Notification implements ShouldQueue
     {
         return match ($this->alertLevel) {
             'urgent' => $message->error(),
-            'critical', 'warning' => $message->warning(),
+            'critical' => $message->error(),
+            'warning' => $message,
             default => $message,
         };
     }
