@@ -54,13 +54,11 @@
             {{-- Action Buttons --}}
             <div class="flex items-center justify-between mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-700">
                 <div class="flex gap-3">
-                    <flux:button wire:click="retry" variant="primary">
-                        <flux:icon.arrow-path class="size-5" />
+                    <flux:button wire:click="retry" variant="primary" icon="arrow-path">
                         Retry Job
                     </flux:button>
 
-                    <flux:button wire:click="delete" wire:confirm="Are you sure you want to delete this job?" variant="danger">
-                        <flux:icon.trash class="size-5" />
+                    <flux:button wire:click="delete" wire:confirm="Are you sure you want to delete this job?" variant="danger" icon="trash">
                         Delete Job
                     </flux:button>
                 </div>
