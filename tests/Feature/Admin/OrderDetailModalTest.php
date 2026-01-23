@@ -152,6 +152,7 @@ test('modal closes after retry provisioning', function () {
     $subscription = Subscription::factory()->create();
     $order = Order::factory()->create([
         'subscription_id' => $subscription->id,
+        'status' => OrderStatus::ProvisioningFailed,
     ]);
 
     Livewire::actingAs($admin)
