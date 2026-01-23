@@ -1,6 +1,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+{{-- Prevent flash of light mode - apply dark class immediately before CSS loads --}}
+<script>
+    if (window.localStorage.getItem('flux.appearance') !== 'light') {
+        document.documentElement.classList.add('dark')
+    }
+</script>
+
 <title>{{ $title ?? config('app.name') }}</title>
 
 <link rel="icon" href="/favicon.ico" sizes="any">
