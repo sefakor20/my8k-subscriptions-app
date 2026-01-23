@@ -64,7 +64,7 @@ class ResellerCreditsService
     /**
      * Log a balance snapshot to the database
      */
-    public function logBalanceSnapshot(?string $reason = null, ?string $provisioningLogId = null): ResellerCreditLog
+    public function logBalanceSnapshot(?string $reason = null, ?string $provisioningLogId = null): ?ResellerCreditLog
     {
         try {
             $response = $this->my8kClient->getResellerInfo();
@@ -108,14 +108,14 @@ class ResellerCreditsService
                 'reason' => $reason,
             ]);
 
-            throw $e;
+            return null;
         }
     }
 
     /**
      * Get balance history time series
      *
-     * @return array{labels: array<string>, data: array<float>}
+     * @return array{labels: array<string>, data: array<float>, error: string|null}
      */
     public function getBalanceHistory(int $days = 30): array
     {
@@ -123,30 +123,44 @@ class ResellerCreditsService
             "reseller.credits.balance_history.{$days}d",
             self::CACHE_DURATION,
             function () use ($days): array {
-                $startDate = now()->subDays($days - 1)->startOfDay();
-                $endDate = now()->endOfDay();
+                try {
+                    $startDate = now()->subDays($days - 1)->startOfDay();
+                    $endDate = now()->endOfDay();
 
-                $period = CarbonPeriod::create($startDate, '1 day', $endDate);
+                    $period = CarbonPeriod::create($startDate, '1 day', $endDate);
 
-                $labels = [];
-                $data = [];
+                    $labels = [];
+                    $data = [];
 
-                foreach ($period as $date) {
-                    $dayEnd = $date->copy()->endOfDay();
+                    foreach ($period as $date) {
+                        $dayEnd = $date->copy()->endOfDay();
 
-                    // Get the last balance snapshot for this day
-                    $log = ResellerCreditLog::where('created_at', '<=', $dayEnd)
-                        ->latest()
-                        ->first();
+                        // Get the last balance snapshot for this day
+                        $log = ResellerCreditLog::where('created_at', '<=', $dayEnd)
+                            ->latest()
+                            ->first();
 
-                    $labels[] = $date->format('M d');
-                    $data[] = $log?->balance ?? 0;
+                        $labels[] = $date->format('M d');
+                        $data[] = $log?->balance ?? 0;
+                    }
+
+                    return [
+                        'labels' => $labels,
+                        'data' => $data,
+                        'error' => null,
+                    ];
+                } catch (Exception $e) {
+                    Log::error('Failed to get balance history', [
+                        'error' => $e->getMessage(),
+                        'days' => $days,
+                    ]);
+
+                    return [
+                        'labels' => [],
+                        'data' => [],
+                        'error' => 'Unable to fetch balance history',
+                    ];
                 }
-
-                return [
-                    'labels' => $labels,
-                    'data' => $data,
-                ];
             },
         );
     }
@@ -154,7 +168,7 @@ class ResellerCreditsService
     /**
      * Get daily usage patterns
      *
-     * @return array{labels: array<string>, data: array<float>}
+     * @return array{labels: array<string>, data: array<float>, error: string|null}
      */
     public function getDailyUsage(int $days = 30): array
     {
@@ -162,31 +176,45 @@ class ResellerCreditsService
             "reseller.credits.daily_usage.{$days}d",
             self::CACHE_DURATION,
             function () use ($days): array {
-                $startDate = now()->subDays($days - 1)->startOfDay();
-                $endDate = now()->endOfDay();
+                try {
+                    $startDate = now()->subDays($days - 1)->startOfDay();
+                    $endDate = now()->endOfDay();
 
-                $period = CarbonPeriod::create($startDate, '1 day', $endDate);
+                    $period = CarbonPeriod::create($startDate, '1 day', $endDate);
 
-                $labels = [];
-                $data = [];
+                    $labels = [];
+                    $data = [];
 
-                foreach ($period as $date) {
-                    $dayStart = $date->copy()->startOfDay();
-                    $dayEnd = $date->copy()->endOfDay();
+                    foreach ($period as $date) {
+                        $dayStart = $date->copy()->startOfDay();
+                        $dayEnd = $date->copy()->endOfDay();
 
-                    // Get all debits (usage) for this day
-                    $usage = ResellerCreditLog::whereBetween('created_at', [$dayStart, $dayEnd])
-                        ->debits()
-                        ->sum('change_amount');
+                        // Get all debits (usage) for this day
+                        $usage = ResellerCreditLog::whereBetween('created_at', [$dayStart, $dayEnd])
+                            ->debits()
+                            ->sum('change_amount');
 
-                    $labels[] = $date->format('M d');
-                    $data[] = (float) $usage;
+                        $labels[] = $date->format('M d');
+                        $data[] = (float) $usage;
+                    }
+
+                    return [
+                        'labels' => $labels,
+                        'data' => $data,
+                        'error' => null,
+                    ];
+                } catch (Exception $e) {
+                    Log::error('Failed to get daily usage', [
+                        'error' => $e->getMessage(),
+                        'days' => $days,
+                    ]);
+
+                    return [
+                        'labels' => [],
+                        'data' => [],
+                        'error' => 'Unable to fetch usage data',
+                    ];
                 }
-
-                return [
-                    'labels' => $labels,
-                    'data' => $data,
-                ];
             },
         );
     }
@@ -200,7 +228,8 @@ class ResellerCreditsService
      *     change7d: float,
      *     avgDailyUsage: float,
      *     estimatedDepletionDays: int|null,
-     *     alertLevel: string
+     *     alertLevel: string,
+     *     error: string|null
      * }
      */
     public function calculateUsageMetrics(): array
@@ -209,42 +238,59 @@ class ResellerCreditsService
             'reseller.credits.usage_metrics',
             self::CACHE_DURATION,
             function (): array {
-                $currentBalance = $this->getCurrentBalance();
+                try {
+                    $currentBalance = $this->getCurrentBalance();
 
-                // Get balance 24 hours ago
-                $log24h = ResellerCreditLog::where('created_at', '<=', now()->subDay())
-                    ->latest()
-                    ->first();
-                $change24h = $log24h ? ($currentBalance - $log24h->balance) : 0;
+                    // Get balance 24 hours ago
+                    $log24h = ResellerCreditLog::where('created_at', '<=', now()->subDay())
+                        ->latest()
+                        ->first();
+                    $change24h = $log24h ? ($currentBalance - $log24h->balance) : 0;
 
-                // Get balance 7 days ago
-                $log7d = ResellerCreditLog::where('created_at', '<=', now()->subDays(7))
-                    ->latest()
-                    ->first();
-                $change7d = $log7d ? ($currentBalance - $log7d->balance) : 0;
+                    // Get balance 7 days ago
+                    $log7d = ResellerCreditLog::where('created_at', '<=', now()->subDays(7))
+                        ->latest()
+                        ->first();
+                    $change7d = $log7d ? ($currentBalance - $log7d->balance) : 0;
 
-                // Calculate average daily usage (last 30 days)
-                $avgDailyUsage = ResellerCreditLog::where('created_at', '>=', now()->subDays(30))
-                    ->debits()
-                    ->avg('change_amount') ?? 0;
+                    // Calculate average daily usage (last 30 days)
+                    $avgDailyUsage = ResellerCreditLog::where('created_at', '>=', now()->subDays(30))
+                        ->debits()
+                        ->avg('change_amount') ?? 0;
 
-                // Estimate depletion date
-                $estimatedDepletionDays = null;
-                if ($avgDailyUsage > 0) {
-                    $estimatedDepletionDays = (int) ceil($currentBalance / $avgDailyUsage);
+                    // Estimate depletion date
+                    $estimatedDepletionDays = null;
+                    if ($avgDailyUsage > 0) {
+                        $estimatedDepletionDays = (int) ceil($currentBalance / $avgDailyUsage);
+                    }
+
+                    // Determine alert level
+                    $alertLevel = $this->determineAlertLevel($currentBalance);
+
+                    return [
+                        'currentBalance' => $currentBalance,
+                        'change24h' => round($change24h, 2),
+                        'change7d' => round($change7d, 2),
+                        'avgDailyUsage' => round($avgDailyUsage, 2),
+                        'estimatedDepletionDays' => $estimatedDepletionDays,
+                        'alertLevel' => $alertLevel,
+                        'error' => null,
+                    ];
+                } catch (Exception $e) {
+                    Log::error('Failed to calculate usage metrics', [
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    return [
+                        'currentBalance' => 0.0,
+                        'change24h' => 0.0,
+                        'change7d' => 0.0,
+                        'avgDailyUsage' => 0.0,
+                        'estimatedDepletionDays' => null,
+                        'alertLevel' => 'unknown',
+                        'error' => 'Unable to fetch credit data from My8K API',
+                    ];
                 }
-
-                // Determine alert level
-                $alertLevel = $this->determineAlertLevel($currentBalance);
-
-                return [
-                    'currentBalance' => $currentBalance,
-                    'change24h' => round($change24h, 2),
-                    'change7d' => round($change7d, 2),
-                    'avgDailyUsage' => round($avgDailyUsage, 2),
-                    'estimatedDepletionDays' => $estimatedDepletionDays,
-                    'alertLevel' => $alertLevel,
-                ];
             },
         );
     }

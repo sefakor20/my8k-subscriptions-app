@@ -36,3 +36,10 @@ Schedule::command('subscriptions:suspend-failed-payments --limit=100')
     ->withoutOverlapping()
     ->runInBackground()
     ->appendOutputTo(storage_path('logs/failed-payment-suspensions.log'));
+
+// Reconcile provisioned subscriptions with pending status daily at 3:00 AM
+Schedule::command('subscriptions:reconcile-provisioned-status --limit=20')
+    ->dailyAt('03:00')
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->appendOutputTo(storage_path('logs/subscription-reconciliation.log'));
