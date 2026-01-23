@@ -43,7 +43,7 @@
                         @foreach ($this->orders as $order)
                             <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <flux:text class="font-mono">#{{ $order->woocommerce_order_id ?? $order->id }}</flux:text>
+                                    <flux:text class="font-mono">#{{ $order->woocommerce_order_id ?: $order->id }}</flux:text>
                                 </td>
                                 <td class="px-6 py-4">
                                     @if ($order->subscription && $order->subscription->plan)
