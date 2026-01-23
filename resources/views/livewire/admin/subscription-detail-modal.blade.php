@@ -178,27 +178,23 @@
             {{-- Action Buttons --}}
             <div class="flex items-center justify-between mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-700">
                 <div class="flex gap-3">
-                    <flux:button wire:click="retryProvisioning" variant="primary">
-                        <flux:icon.arrow-path class="size-5" />
+                    <flux:button wire:click="retryProvisioning" variant="primary" icon="arrow-path">
                         Retry Provisioning
                     </flux:button>
 
                     @if ($this->subscription->status === \App\Enums\SubscriptionStatus::Active)
-                        <flux:button wire:click="suspend" variant="subtle">
-                            <flux:icon.pause-circle class="size-5" />
+                        <flux:button wire:click="suspend" variant="subtle" icon="pause-circle">
                             Suspend
                         </flux:button>
                     @elseif ($this->subscription->status === \App\Enums\SubscriptionStatus::Suspended)
-                        <flux:button wire:click="reactivate" variant="subtle">
-                            <flux:icon.play-circle class="size-5" />
+                        <flux:button wire:click="reactivate" variant="subtle" icon="play-circle">
                             Reactivate
                         </flux:button>
                     @endif
                 </div>
 
                 <div class="flex gap-3">
-                    <flux:button wire:click="cancel" variant="danger">
-                        <flux:icon.x-circle class="size-5" />
+                    <flux:button wire:click="cancel" variant="danger" icon="x-circle">
                         Cancel Subscription
                     </flux:button>
 

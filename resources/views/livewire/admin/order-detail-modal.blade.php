@@ -123,8 +123,7 @@
 
             {{-- Action Buttons --}}
             <div class="flex items-center justify-between mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-700">
-                <flux:button wire:click="retryProvisioning" variant="primary">
-                    <flux:icon.arrow-path class="size-5" />
+                <flux:button wire:click="retryProvisioning" variant="primary" icon="arrow-path">
                     Retry Provisioning
                 </flux:button>
 
