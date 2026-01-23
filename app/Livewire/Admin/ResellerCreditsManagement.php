@@ -6,6 +6,8 @@ namespace App\Livewire\Admin;
 
 use App\Models\ResellerCreditLog;
 use App\Services\Admin\ResellerCreditsService;
+use Exception;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -18,13 +20,37 @@ class ResellerCreditsManagement extends Component
 
     public string $filterType = 'all';
 
+    public ?string $metricsError = null;
+
+    public ?string $historyError = null;
+
+    public ?string $usageError = null;
+
     /**
      * Get usage metrics
      */
     #[Computed]
     public function metrics(): array
     {
-        return app(ResellerCreditsService::class)->calculateUsageMetrics();
+        try {
+            $metrics = app(ResellerCreditsService::class)->calculateUsageMetrics();
+            $this->metricsError = $metrics['error'] ?? null;
+
+            return $metrics;
+        } catch (Exception $e) {
+            Log::error('Failed to load metrics', ['error' => $e->getMessage()]);
+            $this->metricsError = 'Unable to load metrics';
+
+            return [
+                'currentBalance' => 0.0,
+                'change24h' => 0.0,
+                'change7d' => 0.0,
+                'avgDailyUsage' => 0.0,
+                'estimatedDepletionDays' => null,
+                'alertLevel' => 'unknown',
+                'error' => $this->metricsError,
+            ];
+        }
     }
 
     /**
@@ -33,7 +59,21 @@ class ResellerCreditsManagement extends Component
     #[Computed]
     public function balanceHistory(): array
     {
-        return app(ResellerCreditsService::class)->getBalanceHistory($this->dateRange);
+        try {
+            $history = app(ResellerCreditsService::class)->getBalanceHistory($this->dateRange);
+            $this->historyError = $history['error'] ?? null;
+
+            return $history;
+        } catch (Exception $e) {
+            Log::error('Failed to load balance history', ['error' => $e->getMessage()]);
+            $this->historyError = 'Unable to load balance history';
+
+            return [
+                'labels' => [],
+                'data' => [],
+                'error' => $this->historyError,
+            ];
+        }
     }
 
     /**
@@ -42,7 +82,21 @@ class ResellerCreditsManagement extends Component
     #[Computed]
     public function dailyUsage(): array
     {
-        return app(ResellerCreditsService::class)->getDailyUsage($this->dateRange);
+        try {
+            $usage = app(ResellerCreditsService::class)->getDailyUsage($this->dateRange);
+            $this->usageError = $usage['error'] ?? null;
+
+            return $usage;
+        } catch (Exception $e) {
+            Log::error('Failed to load daily usage', ['error' => $e->getMessage()]);
+            $this->usageError = 'Unable to load usage data';
+
+            return [
+                'labels' => [],
+                'data' => [],
+                'error' => $this->usageError,
+            ];
+        }
     }
 
     /**
@@ -59,15 +113,28 @@ class ResellerCreditsManagement extends Component
      */
     public function refreshBalance(): void
     {
-        app(ResellerCreditsService::class)->clearCache();
-        app(ResellerCreditsService::class)->logBalanceSnapshot('Manual refresh from credits page');
+        try {
+            $result = app(ResellerCreditsService::class)->logBalanceSnapshot('Manual refresh from credits page');
 
-        unset($this->metrics);
-        unset($this->balanceHistory);
-        unset($this->dailyUsage);
+            if ($result === null) {
+                $this->metricsError = 'Failed to refresh from My8K API';
+            } else {
+                app(ResellerCreditsService::class)->clearCache();
+                $this->metricsError = null;
+                $this->historyError = null;
+                $this->usageError = null;
 
-        $this->dispatch('balance-refreshed');
-        $this->resetPage();
+                unset($this->metrics);
+                unset($this->balanceHistory);
+                unset($this->dailyUsage);
+
+                $this->dispatch('balance-refreshed');
+                $this->resetPage();
+            }
+        } catch (Exception $e) {
+            Log::error('Failed to refresh', ['error' => $e->getMessage()]);
+            $this->metricsError = 'Failed to refresh: ' . $e->getMessage();
+        }
     }
 
     /**

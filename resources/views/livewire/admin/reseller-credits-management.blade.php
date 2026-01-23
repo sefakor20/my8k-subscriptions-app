@@ -24,6 +24,21 @@
         </div>
     </div>
 
+    {{-- Error Alerts --}}
+    @if($metricsError)
+        <div class="mb-6">
+            <flux:callout variant="danger" class="flex items-center justify-between">
+                <div>
+                    <div class="font-semibold">Unable to Load Metrics</div>
+                    <p class="text-sm mt-1">{{ $metricsError }}</p>
+                </div>
+                <flux:button wire:click="refreshBalance" size="sm" variant="outline">
+                    Retry
+                </flux:button>
+            </flux:callout>
+        </div>
+    @endif
+
     {{-- Metrics Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {{-- Current Balance --}}
@@ -39,12 +54,12 @@
                         'urgent' => 'red',
                     ];
                 @endphp
-                @if($alertLevel !== 'ok')
+                @if($alertLevel !== 'ok' && !$metricsError)
                     <flux:badge size="sm" :color="$badgeColors[$alertLevel]">{{ ucfirst($alertLevel) }}</flux:badge>
                 @endif
             </div>
-            <div class="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-                {{ number_format($this->metrics['currentBalance'], 0) }}
+            <div class="text-3xl font-bold {{ $metricsError ? 'text-zinc-500 dark:text-zinc-400' : 'text-zinc-900 dark:text-zinc-100' }}">
+                {{ $metricsError ? 'N/A' : number_format($this->metrics['currentBalance'], 0) }}
             </div>
             <flux:text variant="muted" size="xs">credits available</flux:text>
         </div>
@@ -52,32 +67,42 @@
         {{-- 24h Change --}}
         <div class="bg-white dark:bg-zinc-800 rounded-lg shadow p-6 border border-zinc-200 dark:border-zinc-700">
             <flux:text variant="muted" size="sm" class="mb-2">24h Change</flux:text>
-            <div class="text-3xl font-bold {{ $this->metrics['change24h'] < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">
-                {{ $this->metrics['change24h'] >= 0 ? '+' : '' }}{{ number_format($this->metrics['change24h'], 0) }}
-            </div>
-            <flux:text variant="muted" size="xs">credits {{ $this->metrics['change24h'] < 0 ? 'used' : 'added' }}</flux:text>
+            @if($metricsError)
+                <div class="text-3xl font-bold text-zinc-500 dark:text-zinc-400">N/A</div>
+                <flux:text variant="muted" size="xs">data unavailable</flux:text>
+            @else
+                <div class="text-3xl font-bold {{ $this->metrics['change24h'] < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">
+                    {{ $this->metrics['change24h'] >= 0 ? '+' : '' }}{{ number_format($this->metrics['change24h'], 0) }}
+                </div>
+                <flux:text variant="muted" size="xs">credits {{ $this->metrics['change24h'] < 0 ? 'used' : 'added' }}</flux:text>
+            @endif
         </div>
 
         {{-- Avg Daily Usage --}}
         <div class="bg-white dark:bg-zinc-800 rounded-lg shadow p-6 border border-zinc-200 dark:border-zinc-700">
             <flux:text variant="muted" size="sm" class="mb-2">Avg Daily Usage</flux:text>
-            <div class="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-                {{ number_format($this->metrics['avgDailyUsage'], 1) }}
-            </div>
-            <flux:text variant="muted" size="xs">credits per day</flux:text>
+            @if($metricsError)
+                <div class="text-3xl font-bold text-zinc-500 dark:text-zinc-400">N/A</div>
+                <flux:text variant="muted" size="xs">data unavailable</flux:text>
+            @else
+                <div class="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+                    {{ number_format($this->metrics['avgDailyUsage'], 1) }}
+                </div>
+                <flux:text variant="muted" size="xs">credits per day</flux:text>
+            @endif
         </div>
 
         {{-- Depletion Estimate --}}
         <div class="bg-white dark:bg-zinc-800 rounded-lg shadow p-6 border border-zinc-200 dark:border-zinc-700">
             <flux:text variant="muted" size="sm" class="mb-2">Depletion Estimate</flux:text>
-            @if($this->metrics['estimatedDepletionDays'])
+            @if($metricsError || !$this->metrics['estimatedDepletionDays'])
+                <div class="text-3xl font-bold text-zinc-500 dark:text-zinc-400">N/A</div>
+                <flux:text variant="muted" size="xs">{{ $metricsError ? 'data unavailable' : 'insufficient data' }}</flux:text>
+            @else
                 <div class="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
                     ~{{ $this->metrics['estimatedDepletionDays'] }}
                 </div>
                 <flux:text variant="muted" size="xs">days remaining</flux:text>
-            @else
-                <div class="text-3xl font-bold text-zinc-500 dark:text-zinc-400">N/A</div>
-                <flux:text variant="muted" size="xs">insufficient data</flux:text>
             @endif
         </div>
     </div>
@@ -104,7 +129,15 @@
         <div class="bg-white dark:bg-zinc-800 rounded-lg shadow p-6 border border-zinc-200 dark:border-zinc-700">
             <flux:heading size="lg" class="mb-4">Credit Balance History</flux:heading>
             <div class="h-64">
-                @if(empty($this->balanceHistory['labels']) || empty($this->balanceHistory['data']))
+                @if($historyError)
+                    <div class="flex flex-col items-center justify-center h-full text-zinc-500">
+                        <flux:icon.exclamation-triangle class="size-8 mb-2 text-red-500" />
+                        <p>{{ $historyError }}</p>
+                        <flux:button wire:click="refreshBalance" size="sm" variant="ghost" class="mt-2">
+                            Retry
+                        </flux:button>
+                    </div>
+                @elseif(empty($this->balanceHistory['labels']) || empty($this->balanceHistory['data']))
                     <div class="flex items-center justify-center h-full text-zinc-500">
                         No balance history data available yet
                     </div>
@@ -125,7 +158,15 @@
         <div class="bg-white dark:bg-zinc-800 rounded-lg shadow p-6 border border-zinc-200 dark:border-zinc-700">
             <flux:heading size="lg" class="mb-4">Daily Credit Usage</flux:heading>
             <div class="h-64">
-                @if(empty($this->dailyUsage['labels']) || empty($this->dailyUsage['data']))
+                @if($usageError)
+                    <div class="flex flex-col items-center justify-center h-full text-zinc-500">
+                        <flux:icon.exclamation-triangle class="size-8 mb-2 text-red-500" />
+                        <p>{{ $usageError }}</p>
+                        <flux:button wire:click="refreshBalance" size="sm" variant="ghost" class="mt-2">
+                            Retry
+                        </flux:button>
+                    </div>
+                @elseif(empty($this->dailyUsage['labels']) || empty($this->dailyUsage['data']))
                     <div class="flex items-center justify-center h-full text-zinc-500">
                         No usage data available yet
                     </div>

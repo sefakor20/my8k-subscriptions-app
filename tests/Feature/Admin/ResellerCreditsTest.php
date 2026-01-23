@@ -208,7 +208,7 @@ test('balance history is computed correctly', function () {
 
     $balanceHistory = $component->instance()->balanceHistory;
 
-    expect($balanceHistory)->toHaveKeys(['labels', 'data']);
+    expect($balanceHistory)->toHaveKeys(['labels', 'data', 'error']);
     expect($balanceHistory['labels'])->toBeArray();
     expect($balanceHistory['data'])->toBeArray();
 });
@@ -229,7 +229,7 @@ test('daily usage is computed correctly', function () {
 
     $dailyUsage = $component->instance()->dailyUsage;
 
-    expect($dailyUsage)->toHaveKeys(['labels', 'data']);
+    expect($dailyUsage)->toHaveKeys(['labels', 'data', 'error']);
     expect($dailyUsage['labels'])->toBeArray();
     expect($dailyUsage['data'])->toBeArray();
 });
@@ -261,6 +261,7 @@ test('metrics are computed correctly', function () {
         'avgDailyUsage',
         'estimatedDepletionDays',
         'alertLevel',
+        'error',
     ]);
 });
 
@@ -389,8 +390,8 @@ test('charts show proper data structure', function () {
     $dailyUsage = $component->instance()->dailyUsage;
 
     // Should have proper structure
-    expect($balanceHistory)->toHaveKeys(['labels', 'data']);
-    expect($dailyUsage)->toHaveKeys(['labels', 'data']);
+    expect($balanceHistory)->toHaveKeys(['labels', 'data', 'error']);
+    expect($dailyUsage)->toHaveKeys(['labels', 'data', 'error']);
 });
 
 test('credits link is in sidebar navigation', function () {
