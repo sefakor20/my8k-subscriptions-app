@@ -245,18 +245,18 @@ class ResellerCreditsService
                     $log24h = ResellerCreditLog::where('created_at', '<=', now()->subDay())
                         ->latest()
                         ->first();
-                    $change24h = $log24h ? ($currentBalance - $log24h->balance) : 0;
+                    $change24h = $log24h ? (float) ($currentBalance - $log24h->balance) : 0.0;
 
                     // Get balance 7 days ago
                     $log7d = ResellerCreditLog::where('created_at', '<=', now()->subDays(7))
                         ->latest()
                         ->first();
-                    $change7d = $log7d ? ($currentBalance - $log7d->balance) : 0;
+                    $change7d = $log7d ? (float) ($currentBalance - $log7d->balance) : 0.0;
 
                     // Calculate average daily usage (last 30 days)
-                    $avgDailyUsage = ResellerCreditLog::where('created_at', '>=', now()->subDays(30))
+                    $avgDailyUsage = (float) (ResellerCreditLog::where('created_at', '>=', now()->subDays(30))
                         ->debits()
-                        ->avg('change_amount') ?? 0;
+                        ->avg('change_amount') ?? 0);
 
                     // Estimate depletion date
                     $estimatedDepletionDays = null;
