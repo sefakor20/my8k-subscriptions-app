@@ -21,13 +21,11 @@ class ServiceAccountFactory extends Factory
      */
     public function definition(): array
     {
-        $subscription = Subscription::factory()->create();
         $activatedAt = now()->subDays(fake()->numberBetween(1, 30));
-        $expiresAt = $activatedAt->copy()->addDays($subscription->plan->duration_days);
 
         return [
-            'subscription_id' => $subscription->id,
-            'user_id' => $subscription->user_id,
+            'subscription_id' => Subscription::factory(),
+            'user_id' => fn(array $attributes) => Subscription::find($attributes['subscription_id'])?->user_id ?? User::factory(),
             'my8k_account_id' => 'MY8K_' . fake()->unique()->numerify('######'),
             'username' => 'user_' . fake()->unique()->userName(),
             'password' => fake()->password(12, 16),
@@ -36,10 +34,12 @@ class ServiceAccountFactory extends Factory
                 'http://server2.my8k.com:8080',
                 'http://server3.my8k.com:8080',
             ]),
-            'max_connections' => $subscription->plan->max_devices ?? 1,
+            'max_connections' => fn(array $attributes) => Subscription::find($attributes['subscription_id'])?->plan?->max_devices ?? 1,
             'status' => ServiceAccountStatus::Active,
             'activated_at' => $activatedAt,
-            'expires_at' => $expiresAt,
+            'expires_at' => fn(array $attributes) => Subscription::find($attributes['subscription_id'])?->plan
+                ? $activatedAt->copy()->addDays(Subscription::find($attributes['subscription_id'])->plan->duration_days)
+                : now()->addDays(30),
             'last_extended_at' => $activatedAt,
             'my8k_metadata' => [
                 'created_ip' => fake()->ipv4(),
