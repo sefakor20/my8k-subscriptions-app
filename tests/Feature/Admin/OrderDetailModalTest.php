@@ -37,7 +37,7 @@ test('modal displays order details correctly', function () {
     $order = Order::factory()->create([
         'user_id' => $user->id,
         'subscription_id' => $subscription->id,
-        'amount' => 2999,
+        'amount' => 29.99,
         'currency' => 'USD',
     ]);
 

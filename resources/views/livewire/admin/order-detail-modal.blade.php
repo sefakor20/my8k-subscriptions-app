@@ -35,7 +35,7 @@
                     <div class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4 space-y-2">
                         <div class="flex justify-between">
                             <flux:text variant="muted">Amount</flux:text>
-                            <flux:text>${{ number_format($this->order->amount / 100, 2) }}</flux:text>
+                            <flux:text>{{ $this->order->formattedAmount() }}</flux:text>
                         </div>
                         <div class="flex justify-between">
                             <flux:text variant="muted">Currency</flux:text>

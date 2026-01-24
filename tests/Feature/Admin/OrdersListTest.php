@@ -208,7 +208,7 @@ test('orders display correct amount', function () {
     $admin = User::factory()->admin()->create();
 
     Order::factory()->create([
-        'amount' => 2999,
+        'amount' => 29.99,
         'currency' => 'USD',
     ]);
 

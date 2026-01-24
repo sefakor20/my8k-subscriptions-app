@@ -124,7 +124,7 @@
                                 {{ $order->subscription?->plan->name ?? 'N/A' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">
-                                ${{ number_format($order->amount / 100, 2) }}
+                                {{ $order->formattedAmount() }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <x-admin.status-badge :status="$order->status" />
