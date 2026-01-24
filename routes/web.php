@@ -21,6 +21,9 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 
     // Support Tickets
     Route::get('/support/my-tickets', \App\Livewire\Customer\MyTickets::class)->name('support.my-tickets');
+
+    // Help Pages
+    Route::get('/help/vpn', \App\Livewire\Customer\VpnHelp::class)->name('help.vpn');
 });
 
 // Checkout Routes
