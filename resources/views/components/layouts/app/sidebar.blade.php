@@ -10,6 +10,10 @@
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
+            @if(session('impersonator_id'))
+                <livewire:stop-impersonation />
+            @endif
+
             <flux:sidebar.nav>
                 @if(!auth()->user()?->isAdmin())
                     <flux:sidebar.group :heading="__('My Account')" class="grid">
@@ -55,12 +59,16 @@
                             {{ __('Analytics') }}
                         </flux:sidebar.item>
 
-                        <flux:sidebar.item icon="users" :href="route('admin.analytics.cohorts')" :current="request()->routeIs('admin.analytics.cohorts')" wire:navigate>
+                        <flux:sidebar.item icon="user-group" :href="route('admin.analytics.cohorts')" :current="request()->routeIs('admin.analytics.cohorts')" wire:navigate>
                             {{ __('Cohort Analysis') }}
                         </flux:sidebar.item>
 
                         <flux:sidebar.item icon="credit-card" :href="route('admin.credits')" :current="request()->routeIs('admin.credits')" wire:navigate>
                             {{ __('Credits') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="users" :href="route('admin.customers.index')" :current="request()->routeIs('admin.customers.*')" wire:navigate>
+                            {{ __('Customers') }}
                         </flux:sidebar.item>
 
                         <flux:sidebar.item icon="rectangle-stack" :href="route('admin.subscriptions.index')" :current="request()->routeIs('admin.subscriptions.*')" wire:navigate>

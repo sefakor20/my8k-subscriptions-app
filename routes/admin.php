@@ -6,6 +6,7 @@ use App\Livewire\Admin\Analytics;
 use App\Livewire\Admin\CohortAnalysis;
 use App\Livewire\Admin\CouponAnalytics;
 use App\Livewire\Admin\CouponsList;
+use App\Livewire\Admin\CustomersList;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\FailedJobsList;
 use App\Livewire\Admin\InvoicesList;
@@ -40,6 +41,9 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function (): void {
 
     // Reseller credits management route
     Route::get('/credits', ResellerCreditsManagement::class)->name('admin.credits');
+
+    // Customers management routes
+    Route::get('/customers', CustomersList::class)->name('admin.customers.index');
 
     // Subscriptions management routes
     Route::get('/subscriptions', SubscriptionsList::class)->name('admin.subscriptions.index');
