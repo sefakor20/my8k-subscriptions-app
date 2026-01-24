@@ -24,6 +24,9 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 
     // Help Pages
     Route::get('/help/vpn', \App\Livewire\Customer\VpnHelp::class)->name('help.vpn');
+
+    // Streaming Apps
+    Route::get('/apps', \App\Livewire\Customer\StreamingApps::class)->name('streaming-apps');
 });
 
 // Checkout Routes
