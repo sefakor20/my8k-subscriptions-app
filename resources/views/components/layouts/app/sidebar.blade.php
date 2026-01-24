@@ -33,6 +33,12 @@
                             {{ __('Support Tickets') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
+
+                    <flux:sidebar.group :heading="__('Help')" class="grid">
+                        <flux:sidebar.item icon="shield-check" :href="route('help.vpn')" :current="request()->routeIs('help.vpn')" wire:navigate>
+                            {{ __('VPN Troubleshooting') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
                 @endif
 
                 @if(auth()->user()?->isAdmin())
