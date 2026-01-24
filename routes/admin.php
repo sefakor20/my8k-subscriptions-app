@@ -15,6 +15,7 @@ use App\Livewire\Admin\PlanChangesList;
 use App\Livewire\Admin\PlansList;
 use App\Livewire\Admin\ProvisioningLogsList;
 use App\Livewire\Admin\ResellerCreditsManagement;
+use App\Livewire\Admin\StreamingAppsList;
 use App\Livewire\Admin\SubscriptionsList;
 use App\Livewire\Admin\SupportTicketsList;
 use Illuminate\Support\Facades\Route;
@@ -70,4 +71,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function (): void {
     // Coupons management routes
     Route::get('/coupons', CouponsList::class)->name('admin.coupons.index');
     Route::get('/coupons/analytics', CouponAnalytics::class)->name('admin.coupons.analytics');
+
+    // Streaming apps management routes
+    Route::get('/streaming-apps', StreamingAppsList::class)->name('admin.streaming-apps.index');
 });

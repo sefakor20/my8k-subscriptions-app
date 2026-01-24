@@ -32,6 +32,10 @@
                         <flux:sidebar.item icon="chat-bubble-left-right" :href="route('support.my-tickets')" :current="request()->routeIs('support.*')" wire:navigate>
                             {{ __('Support Tickets') }}
                         </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="device-phone-mobile" :href="route('streaming-apps')" :current="request()->routeIs('streaming-apps')" wire:navigate>
+                            {{ __('Streaming Apps') }}
+                        </flux:sidebar.item>
                     </flux:sidebar.group>
 
                     <flux:sidebar.group :heading="__('Help')" class="grid">
@@ -93,6 +97,10 @@
 
                         <flux:sidebar.item icon="chat-bubble-left-right" :href="route('admin.support.tickets')" :current="request()->routeIs('admin.support.*')" wire:navigate>
                             {{ __('Support Tickets') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="device-phone-mobile" :href="route('admin.streaming-apps.index')" :current="request()->routeIs('admin.streaming-apps.*')" wire:navigate>
+                            {{ __('Streaming Apps') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endif
