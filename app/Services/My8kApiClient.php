@@ -314,10 +314,16 @@ class My8kApiClient
      */
     private function logRequest(string $method, string $endpoint, array $payload, array $result, int $durationMs, ?Exception $exception = null): void
     {
+        // Redact sensitive data from payload before logging
+        $safePayload = $payload;
+        if (isset($safePayload['api_key'])) {
+            $safePayload['api_key'] = '[REDACTED]';
+        }
+
         $context = [
             'method' => $method,
             'endpoint' => $endpoint,
-            'payload' => $payload,
+            'payload' => $safePayload,
             'duration_ms' => $durationMs,
             'success' => $result['success'] ?? false,
         ];
